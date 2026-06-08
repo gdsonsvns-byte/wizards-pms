@@ -1,0 +1,15 @@
+[
+  {
+    "id": "domain_001",
+    "clientId": "client_001",
+    "clientName": "G D Sons",
+    "domain": "gdsons.co.in",
+    "registrar": "",
+    "domainExpiry": "",
+    "hostingProvider": "MilesWeb",
+    "hostingExpiry": "",
+    "sslExpiry": "",
+    "sslProvider": "",
+    "notes": "Primary domain for G D Sons e-commerce site"
+  }
+]

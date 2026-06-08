@@ -1,0 +1,13 @@
+[
+  {
+    "id": "event_001",
+    "clientId": "client_001",
+    "clientName": "G D Sons",
+    "title": "SEO Audit Review",
+    "description": "Review initial SEO audit findings",
+    "date": "2026-06-15",
+    "time": "11:00",
+    "type": "Meeting",
+    "status": "Upcoming"
+  }
+]

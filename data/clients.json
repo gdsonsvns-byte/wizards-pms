@@ -1,0 +1,14 @@
+[
+  {
+    "id": "client_001",
+    "name": "G D Sons",
+    "website": "gdsons.co.in",
+    "email": "gdsons.vns@gmail.com",
+    "phone": "",
+    "services": ["Website Development", "SEO", "Content", "Maintenance"],
+    "status": "Active",
+    "since": "2026-06-01",
+    "notes": "First client of Wizards Websites. E-Commerce website.",
+    "monthlyValue": 0
+  }
+]

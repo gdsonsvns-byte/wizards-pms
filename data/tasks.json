@@ -1,0 +1,28 @@
+[
+  {
+    "id": "task_001",
+    "clientId": "client_001",
+    "clientName": "G D Sons",
+    "title": "Initial Website Audit",
+    "description": "Complete audit of gdsons.co.in for SEO and performance",
+    "priority": "High",
+    "status": "In Progress",
+    "type": "SEO",
+    "dueDate": "2026-06-15",
+    "createdAt": "2026-06-08",
+    "completedAt": null
+  },
+  {
+    "id": "task_002",
+    "clientId": "client_001",
+    "clientName": "G D Sons",
+    "title": "Product Page Content Update",
+    "description": "Update content for all product pages with SEO-optimised descriptions",
+    "priority": "Medium",
+    "status": "Pending",
+    "type": "Content",
+    "dueDate": "2026-06-20",
+    "createdAt": "2026-06-08",
+    "completedAt": null
+  }
+]
