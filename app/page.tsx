@@ -1,8 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import clientsData from '../data/clients.json'
+import tasksData from '../data/tasks.json'
+import seoData from '../data/seo.json'
+import domainsData from '../data/domains.json'
+import scheduleData from '../data/schedule.json'
+import teamData from '../data/team.json'
 import styles from './page.module.css'
-
-const API = 'https://pms.wizards.co.in/api.php?action=get_all'
 
 type Tab = 'overview' | 'clients' | 'tasks' | 'seo' | 'domains' | 'schedule' | 'team'
 
@@ -15,7 +19,7 @@ function statusColor(s: string) {
   if (['Active','Completed','Live','Ongoing'].includes(s)) return 'badge-green'
   if (['In Progress','Review Pending'].includes(s)) return 'badge-blue'
   if (['Pending','Upcoming','Resuming','Pending Approval'].includes(s)) return 'badge-yellow'
-  if (['Overdue','Blocked'].includes(s)) return 'badge-red'
+  if (s === 'Overdue') return 'badge-red'
   return 'badge-gray'
 }
 function daysUntil(dateStr: string) {
@@ -33,61 +37,17 @@ function expiryBadge(dateStr: string) {
 
 export default function Dashboard() {
   const [tab, setTab] = useState<Tab>('overview')
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [lastUpdated, setLastUpdated] = useState('')
+  const clients = clientsData as any[]
+  const tasks = tasksData as any[]
+  const seo = seoData as any[]
+  const domains = domainsData as any[]
+  const schedule = scheduleData as any[]
+  const team = teamData as any[]
 
-  useEffect(() => {
-    fetchData()
-    // Auto-refresh every 60 seconds
-    const interval = setInterval(fetchData, 60000)
-    return () => clearInterval(interval)
-  }, [])
-
-  async function fetchData() {
-    try {
-      const res = await fetch(API + '&t=' + Date.now())
-      const json = await res.json()
-      if (json.status === 'ok') {
-        setData(json.data)
-        setLastUpdated(json.timestamp)
-        setError('')
-      } else {
-        setError('Failed to load data')
-      }
-    } catch (e) {
-      setError('Cannot connect to database')
-    }
-    setLoading(false)
-  }
-
-  if (loading) return (
-    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'var(--bg)',flexDirection:'column',gap:16}}>
-      <div style={{width:40,height:40,background:'linear-gradient(135deg,#6c63ff,#a78bfa)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:800,fontSize:20}}>W</div>
-      <div style={{color:'var(--text2)',fontSize:14}}>Loading PMS data...</div>
-    </div>
-  )
-
-  if (error) return (
-    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'var(--bg)',flexDirection:'column',gap:12}}>
-      <div style={{fontSize:32}}>⚠️</div>
-      <div style={{color:'var(--red)',fontSize:14}}>{error}</div>
-      <button onClick={fetchData} style={{padding:'8px 20px',background:'var(--accent)',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontSize:13}}>Retry</button>
-    </div>
-  )
-
-  const clients = data.clients || []
-  const tasks = data.tasks || []
-  const seo = data.seo || []
-  const domains = data.domains || []
-  const schedule = data.schedule || []
-  const team = data.team || []
-
-  const pendingTasks = tasks.filter((t:any) => t.status !== 'Completed')
-  const highPriority = tasks.filter((t:any) => t.priority === 'High' && t.status !== 'Completed')
-  const upcomingEvents = schedule.filter((e:any) => new Date(e.date) >= new Date()).slice(0, 5)
-  const activeClients = clients.filter((c:any) => ['Active','In Progress'].includes(c.status))
+  const pendingTasks = tasks.filter(t => t.status !== 'Completed')
+  const highPriority = tasks.filter(t => t.priority === 'High' && t.status !== 'Completed')
+  const upcomingEvents = schedule.filter(e => new Date(e.date) >= new Date()).slice(0, 5)
+  const activeClients = clients.filter(c => c.status === 'Active' || c.status === 'In Progress')
 
   const tabs: { id: Tab; label: string; icon: string; count?: number }[] = [
     { id: 'overview', label: 'Overview', icon: '⚡' },
@@ -116,8 +76,8 @@ export default function Dashboard() {
           ))}
         </nav>
         <div className={styles.sidebarFooter}>
-          <div className={styles.agencyBadge}><div className={styles.agencyDot}></div><span>Live Database</span></div>
-          <div className={styles.lastUpdated}>{lastUpdated ? 'Updated ' + new Date(lastUpdated).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : 'Auto-refresh: 60s'}</div>
+          <div className={styles.agencyBadge}><div className={styles.agencyDot}></div><span>Agency Active</span></div>
+          <div className={styles.lastUpdated}>Updated 08 Jun 2026</div>
         </div>
       </aside>
 
@@ -136,13 +96,13 @@ export default function Dashboard() {
             </p>
           </div>
           <div className={styles.headerMeta}>
-            <button onClick={fetchData} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text2)',padding:'6px 12px',cursor:'pointer',fontSize:12}}>🔄 Refresh</button>
             <span className={styles.dateChip}>{new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'long',year:'numeric'})}</span>
           </div>
         </header>
 
         <div className={styles.content}>
 
+          {/* ── OVERVIEW ── */}
           {tab==='overview'&&(
             <div>
               <div className={styles.statsGrid}>
@@ -178,7 +138,7 @@ export default function Dashboard() {
                   <div className={styles.taskList}>{upcomingEvents.map((e:any)=>(
                     <div key={e.id} className={styles.taskItem}>
                       <div><div className={styles.taskTitle}>{e.title}</div><div className={styles.taskMeta}>{e.clientName} · {e.date}</div></div>
-                      <span className="badge badge-blue">{e.type}</span>
+                      <span className={`badge badge-blue`}>{e.type}</span>
                     </div>
                   ))}</div>}
                 </div>
@@ -204,6 +164,7 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* ── CLIENTS ── */}
           {tab==='clients'&&(
             <div className={styles.clientGrid}>
               {clients.map((c:any)=>(
@@ -221,18 +182,19 @@ export default function Dashboard() {
                   {c.tech&&<div className={styles.clientDetail}>🛠️ {c.tech}</div>}
                   {c.assignedDev&&<div className={styles.clientDetail}>👤 {c.assignedDev}</div>}
                   {(c.city||c.state)&&<div className={styles.clientDetail}>📍 {[c.city,c.state].filter(Boolean).join(', ')}</div>}
-                  <div className={styles.serviceChips}>{(c.services||[]).map((s:string)=><span key={s} className="badge badge-purple">{s}</span>)}</div>
+                  <div className={styles.serviceChips}>{c.services.map((s:string)=><span key={s} className="badge badge-purple">{s}</span>)}</div>
                   {c.notes&&<div className={styles.clientNotes}>{c.notes}</div>}
                   <div className={styles.clientStats}>
-                    <div className={styles.clientStat}><span>{tasks.filter((t:any)=>t.clientId===c.id&&t.status!=='Completed').length}</span><small>Open Tasks</small></div>
-                    <div className={styles.clientStat}><span>{seo.filter((s:any)=>s.clientId===c.id).length}</span><small>SEO</small></div>
-                    <div className={styles.clientStat}><span>{schedule.filter((e:any)=>e.clientId===c.id&&new Date(e.date)>=new Date()).length}</span><small>Upcoming</small></div>
+                    <div className={styles.clientStat}><span>{tasks.filter(t=>t.clientId===c.id&&t.status!=='Completed').length}</span><small>Open Tasks</small></div>
+                    <div className={styles.clientStat}><span>{seo.filter(s=>s.clientId===c.id).length}</span><small>SEO Activities</small></div>
+                    <div className={styles.clientStat}><span>{schedule.filter(e=>e.clientId===c.id&&new Date(e.date)>=new Date()).length}</span><small>Upcoming</small></div>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* ── TASKS ── */}
           {tab==='tasks'&&(
             <div className="card" style={{padding:0,overflow:'hidden'}}>
               <table>
@@ -240,7 +202,7 @@ export default function Dashboard() {
                 <tbody>{tasks.map((t:any)=>(
                   <tr key={t.id}>
                     <td><div style={{fontWeight:500}}>{t.title}</div>{t.description&&<div style={{fontSize:12,color:'var(--text2)',marginTop:2}}>{t.description}</div>}</td>
-                    <td style={{whiteSpace:'nowrap',fontSize:12}}>{t.clientName}</td>
+                    <td style={{whiteSpace:'nowrap'}}>{t.clientName}</td>
                     <td><span className="badge badge-purple">{t.type}</span></td>
                     <td style={{fontSize:12}}>{t.assignedTo}</td>
                     <td><span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span></td>
@@ -252,6 +214,7 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* ── SEO ── */}
           {tab==='seo'&&(
             <div className="card" style={{padding:0,overflow:'hidden'}}>
               <table>
@@ -270,6 +233,7 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* ── DOMAINS ── */}
           {tab==='domains'&&(
             <div className="card" style={{padding:0,overflow:'hidden'}}>
               <table>
@@ -289,6 +253,7 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* ── SCHEDULE ── */}
           {tab==='schedule'&&(
             <div className="card" style={{padding:0,overflow:'hidden'}}>
               <table>
@@ -307,24 +272,25 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* ── TEAM ── */}
           {tab==='team'&&(
             <div className={styles.clientGrid}>
               {team.map((m:any)=>(
                 <div key={m.id} className={`card ${styles.clientCard}`}>
                   <div className={styles.clientHeader}>
-                    <div className={styles.clientAvatar} style={{background:'linear-gradient(135deg,#22c55e,#16a34a)',fontSize:14}}>{m.name.split(' ').map((n:string)=>n[0]).join('').slice(0,2)}</div>
+                    <div className={styles.clientAvatar} style={{background:'linear-gradient(135deg,#22c55e,#16a34a)'}}>{m.name.split(' ').map((n:string)=>n[0]).join('').slice(0,2)}</div>
                     <div>
                       <div className={styles.clientName}>{m.name}</div>
                       <div style={{fontSize:12,color:'var(--text2)'}}>{m.designation}</div>
                     </div>
                     <span className={`badge ${statusColor(m.status)} ${styles.clientStatus}`}>{m.status}</span>
                   </div>
-                  <div className={styles.serviceChips}>{(m.skills||[]).map((s:string)=><span key={s} className="badge badge-blue">{s}</span>)}</div>
+                  <div className={styles.serviceChips}>{m.skills.map((s:string)=><span key={s} className="badge badge-blue">{s}</span>)}</div>
                   {m.responsibilities&&<div className={styles.clientNotes}>{m.responsibilities}</div>}
                   <div className={styles.clientStats}>
-                    <div className={styles.clientStat}><span>{tasks.filter((t:any)=>t.assignedTo===m.name&&t.status!=='Completed').length}</span><small>Open Tasks</small></div>
-                    <div className={styles.clientStat}><span>{tasks.filter((t:any)=>t.assignedTo===m.name&&t.status==='Completed').length}</span><small>Completed</small></div>
-                    <div className={styles.clientStat}><span>{(m.assignedClients||[]).length}</span><small>Clients</small></div>
+                    <div className={styles.clientStat}><span>{tasks.filter(t=>t.assignedTo===m.name&&t.status!=='Completed').length}</span><small>Open Tasks</small></div>
+                    <div className={styles.clientStat}><span>{tasks.filter(t=>t.assignedTo===m.name&&t.status==='Completed').length}</span><small>Completed</small></div>
+                    <div className={styles.clientStat}><span>{m.assignedClients?.length||0}</span><small>Clients</small></div>
                   </div>
                 </div>
               ))}
