@@ -179,6 +179,199 @@ function ProjectDetail({client, tasks, seo, schedule, domains, onBack}:any){
   );
 }
 
+// ── Team Member Detail View ──────────────────────────────────
+function TeamDetail({member, tasks, clients, onBack}:any){
+  const myTasks     = tasks.filter((t:any)=>t.assignedTo===member.name);
+  const openTasks   = myTasks.filter((t:any)=>!['Completed'].includes(t.status));
+  const doneTasks   = myTasks.filter((t:any)=>t.status==='Completed');
+  const highTasks   = myTasks.filter((t:any)=>t.priority==='High'&&t.status!=='Completed');
+  const blockedTasks= myTasks.filter((t:any)=>t.status==='Blocked');
+
+  // Group open tasks by client
+  const byClient:{[k:string]:any[]} = {};
+  openTasks.forEach((t:any)=>{
+    const key = t.clientName||'Unknown';
+    if(!byClient[key]) byClient[key]=[];
+    byClient[key].push(t);
+  });
+
+  const initials = member.name.split(' ').map((n:string)=>n[0]).join('').slice(0,2);
+  const avatarColors = ['#3b5bdb','#0d9e6e','#d97706','#7c3aed','#dc2626','#ea580c','#2563eb'];
+  const colorIdx = member.name.charCodeAt(0) % avatarColors.length;
+
+  return(
+    <div className={styles.projectDetail}>
+      <button className={styles.backBtn} onClick={onBack}>← Back to Team</button>
+
+      {/* Hero */}
+      <div className={styles.projectHero}>
+        <div className={styles.projectHeroTop}>
+          <div className={styles.projectHeroLeft}>
+            <div className={styles.projectBigAvatar} style={{background:`linear-gradient(135deg,${avatarColors[colorIdx]},${avatarColors[(colorIdx+1)%avatarColors.length]})`}}>
+              {initials}
+            </div>
+            <div>
+              <div className={styles.projectHeroName}>{member.name}</div>
+              <div style={{fontSize:13,color:'var(--text2)',marginTop:3}}>{member.designation}</div>
+              {member.isSeniorPartner&&<span className="badge badge-purple" style={{marginTop:6,display:'inline-flex'}}>⭐ Senior Partner</span>}
+            </div>
+          </div>
+          <span className={`badge ${statusColor(member.status)}`}>{member.status}</span>
+        </div>
+
+        {/* Skills */}
+        {member.skills?.length>0&&(
+          <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:14}}>
+            {member.skills.map((s:string)=><span key={s} className="badge badge-gray">🏷 {s}</span>)}
+          </div>
+        )}
+
+        {/* Responsibilities */}
+        {member.responsibilities&&(
+          <div className={styles.projectNotes} style={{marginTop:12}}>
+            📋 {member.responsibilities}
+          </div>
+        )}
+
+        {/* Meta */}
+        <div className={styles.projectMetaGrid} style={{marginTop:14,paddingTop:14,borderTop:'1px solid var(--border)'}}>
+          <div className={styles.projectMetaItem}>
+            <span className={styles.projectMetaLabel}>Total Tasks</span>
+            <span className={styles.projectMetaValue} style={{color:'var(--accent)',fontWeight:700}}>{myTasks.length}</span>
+          </div>
+          <div className={styles.projectMetaItem}>
+            <span className={styles.projectMetaLabel}>Open</span>
+            <span className={styles.projectMetaValue} style={{color:'var(--yellow)',fontWeight:700}}>{openTasks.length}</span>
+          </div>
+          <div className={styles.projectMetaItem}>
+            <span className={styles.projectMetaLabel}>Completed</span>
+            <span className={styles.projectMetaValue} style={{color:'var(--green)',fontWeight:700}}>{doneTasks.length}</span>
+          </div>
+          <div className={styles.projectMetaItem}>
+            <span className={styles.projectMetaLabel}>High Priority</span>
+            <span className={styles.projectMetaValue} style={{color:'var(--red)',fontWeight:700}}>{highTasks.length}</span>
+          </div>
+          <div className={styles.projectMetaItem}>
+            <span className={styles.projectMetaLabel}>Blocked</span>
+            <span className={styles.projectMetaValue} style={{color:'var(--red)',fontWeight:700}}>{blockedTasks.length}</span>
+          </div>
+          <div className={styles.projectMetaItem}>
+            <span className={styles.projectMetaLabel}>Clients</span>
+            <span className={styles.projectMetaValue}>{Object.keys(byClient).length} active</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      {myTasks.length>0&&(
+        <div className={styles.sectionCard}>
+          <div className={styles.sectionTitle}>📊 Task Progress</div>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{flex:1,height:10,background:'var(--bg3)',borderRadius:10,overflow:'hidden'}}>
+              <div style={{
+                height:'100%',
+                width:`${Math.round(doneTasks.length/myTasks.length*100)}%`,
+                background:'linear-gradient(90deg,var(--green),#34d399)',
+                borderRadius:10,transition:'width .5s'
+              }}/>
+            </div>
+            <span style={{fontSize:13,fontWeight:700,color:'var(--green)',whiteSpace:'nowrap'}}>
+              {Math.round(doneTasks.length/myTasks.length*100)}% complete
+            </span>
+          </div>
+          <div style={{display:'flex',gap:16,marginTop:12,flexWrap:'wrap'}}>
+            {[
+              {label:'Completed',count:doneTasks.length,color:'var(--green)'},
+              {label:'In Progress',count:myTasks.filter((t:any)=>t.status==='In Progress').length,color:'var(--accent)'},
+              {label:'Pending',count:myTasks.filter((t:any)=>t.status==='Pending').length,color:'var(--yellow)'},
+              {label:'Ongoing',count:myTasks.filter((t:any)=>t.status==='Ongoing').length,color:'var(--blue)'},
+              {label:'Blocked',count:blockedTasks.length,color:'var(--red)'},
+            ].map(s=>(
+              <div key={s.label} style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
+                <div style={{width:8,height:8,borderRadius:'50%',background:s.color}}/>
+                <span style={{color:'var(--text2)'}}>{s.label}:</span>
+                <span style={{fontWeight:700,color:s.color}}>{s.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tasks grouped by client */}
+      {Object.keys(byClient).length>0&&(
+        <div className={styles.sectionCard}>
+          <div className={styles.sectionTitle}>✅ Open Tasks by Project</div>
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            {Object.entries(byClient).map(([clientName,clientTasks]:any)=>(
+              <div key={clientName}>
+                <div style={{
+                  fontSize:12,fontWeight:700,color:'var(--accent)',
+                  textTransform:'uppercase',letterSpacing:'.06em',
+                  marginBottom:8,paddingBottom:6,
+                  borderBottom:'1px solid var(--border)'
+                }}>
+                  🏢 {clientName} <span style={{color:'var(--text3)',fontWeight:500}}>({clientTasks.length})</span>
+                </div>
+                <div className={styles.timeline}>
+                  {clientTasks.map((t:any,i:number)=>(
+                    <div key={t.id} className={`${styles.timelineItem} ${styles[timelineClass(t.status)]}`}>
+                      <div className={styles.timelineCard}>
+                        <div className={styles.timelineHeader}>
+                          <div className={styles.timelineTitle}>{t.title}</div>
+                          <div style={{display:'flex',gap:6,flexShrink:0}}>
+                            <span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span>
+                            <span className={`badge ${statusColor(t.status)}`}>{t.status}</span>
+                          </div>
+                        </div>
+                        {t.description&&<div className={styles.timelineDesc}>{t.description}</div>}
+                        <div className={styles.timelineMeta}>
+                          <span className={styles.timelineMetaItem}>🏷 {t.type}</span>
+                          {t.dueDate&&<span className={styles.timelineMetaItem} style={{color:daysUntil(t.dueDate)!<3?'var(--red)':'inherit'}}>⏰ Due {t.dueDate}</span>}
+                          {t.followUpBy&&<span className={styles.timelineMetaItem}>👁 Follow-up: {t.followUpBy}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Completed tasks */}
+      {doneTasks.length>0&&(
+        <div className={styles.sectionCard}>
+          <div className={styles.sectionTitle}>🎉 Completed Tasks ({doneTasks.length})</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {doneTasks.map((t:any)=>(
+              <div key={t.id} style={{
+                display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,
+                padding:'10px 14px',background:'var(--greenBg)',
+                borderRadius:8,border:'1px solid #bbf7d0'
+              }}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:13,color:'var(--text)',textDecoration:'line-through',opacity:.7}}>{t.title}</div>
+                  <div style={{fontSize:11,color:'var(--text3)',marginTop:2}}>{t.clientName} · {t.completedAt||'Done'}</div>
+                </div>
+                <span className="badge badge-green">✓ Done</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* No tasks state */}
+      {myTasks.length===0&&(
+        <div className="card empty-state">
+          <div className="icon">📭</div>
+          <p>No tasks assigned to {member.name} yet</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Dashboard ────────────────────────────────────────────
 export default function Dashboard(){
   const [tab,setTab]       = useState<Tab>('overview');
@@ -187,6 +380,7 @@ export default function Dashboard(){
   const [error,setError]   = useState('');
   const [lastUpdated,setLastUpdated] = useState('');
   const [selectedClient,setSelectedClient] = useState<any>(null);
+  const [selectedMember,setSelectedMember] = useState<any>(null);
 
   useEffect(()=>{ fetchData(); const t=setInterval(fetchData,60000); return()=>clearInterval(t); },[]);
 
@@ -236,6 +430,49 @@ export default function Dashboard(){
     {id:'team',    label:'Team',    icon:'👥',count:team.length},
   ];
 
+  // When viewing a team member detail
+  if(selectedMember){
+    return(
+      <div className={styles.shell}>
+        <aside className={styles.sidebar}>
+          <div className={styles.logo}>
+            <div className={styles.logoMark}>W</div>
+            <div><div className={styles.logoName}>Wizards</div><div className={styles.logoSub}>Websites PMS</div></div>
+          </div>
+          <nav className={styles.nav}>
+            {tabs.map(t=>(
+              <button key={t.id} className={`${styles.navItem} ${tab===t.id?styles.navActive:''}`}
+                onClick={()=>{setTab(t.id);setSelectedMember(null);setSelectedClient(null);}}>
+                <span className={styles.navIcon}>{t.icon}</span>
+                <span className={styles.navLabel}>{t.label}</span>
+                {t.count!==undefined&&<span className={styles.navCount}>{t.count}</span>}
+              </button>
+            ))}
+          </nav>
+          <div className={styles.sidebarFooter}>
+            <div className={styles.agencyBadge}><div className={styles.agencyDot}></div><span>Live Database</span></div>
+            <div className={styles.lastUpdated}>{lastUpdated?'Updated '+new Date(lastUpdated).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'Auto-refresh 60s'}</div>
+          </div>
+        </aside>
+        <main className={styles.main}>
+          <header className={styles.header}>
+            <div>
+              <h1 className={styles.pageTitle}>👤 {selectedMember.name}</h1>
+              <p className={styles.pageSubtitle}>{selectedMember.designation} · All assigned tasks</p>
+            </div>
+            <div className={styles.headerMeta}>
+              <button onClick={fetchData} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text2)',padding:'6px 12px',cursor:'pointer',fontSize:12}}>🔄 Refresh</button>
+              <span className={styles.dateChip}>{new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</span>
+            </div>
+          </header>
+          <div className={styles.content}>
+            <TeamDetail member={selectedMember} tasks={tasks} clients={clients} onBack={()=>setSelectedMember(null)} />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // When viewing a client detail
   if(selectedClient){
     return(
@@ -248,7 +485,7 @@ export default function Dashboard(){
           <nav className={styles.nav}>
             {tabs.map(t=>(
               <button key={t.id} className={`${styles.navItem} ${tab===t.id?styles.navActive:''}`}
-                onClick={()=>{setTab(t.id);setSelectedClient(null);}}>
+                onClick={()=>{setTab(t.id);setSelectedClient(null);setSelectedMember(null);}}>
                 <span className={styles.navIcon}>{t.icon}</span>
                 <span className={styles.navLabel}>{t.label}</span>
                 {t.count!==undefined&&<span className={styles.navCount}>{t.count}</span>}
@@ -494,7 +731,7 @@ export default function Dashboard(){
           {tab==='team'&&(
             <div className={styles.clientGrid}>
               {team.map((m:any)=>(
-                <div key={m.id} className={`card ${styles.clientCard}`}>
+                <div key={m.id} className={`card ${styles.clientCard}`} style={{cursor:'pointer'}} onClick={()=>setSelectedMember(m)}>
                   <div className={styles.clientHeader}>
                     <div className={styles.clientAvatar} style={{background:'linear-gradient(135deg,#0d9e6e,#059669)',fontSize:14}}>{m.name.split(' ').map((n:string)=>n[0]).join('').slice(0,2)}</div>
                     <div><div className={styles.clientName}>{m.name}</div><div style={{fontSize:12,color:'var(--text2)'}}>{m.designation}</div></div>
@@ -507,6 +744,7 @@ export default function Dashboard(){
                     <div className={styles.clientStat}><span style={{color:'var(--green)'}}>{tasks.filter((t:any)=>t.assignedTo===m.name&&t.status==='Completed').length}</span><small>Done</small></div>
                     <div className={styles.clientStat}><span style={{color:'var(--purple)'}}>{(m.assignedClients||[]).length}</span><small>Clients</small></div>
                   </div>
+                  <div style={{fontSize:11,color:'var(--text3)',textAlign:'right',marginTop:2}}>Click to view all tasks →</div>
                 </div>
               ))}
             </div>
