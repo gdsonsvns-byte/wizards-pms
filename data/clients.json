@@ -5,7 +5,12 @@
     "website": "gdsons.co.in",
     "email": "gdsons.vns@gmail.com",
     "phone": "",
-    "services": ["Website Development", "SEO", "Content", "Maintenance"],
+    "services": [
+      "Website Development",
+      "SEO",
+      "Content",
+      "Maintenance"
+    ],
     "status": "Active",
     "since": "2026-06-01",
     "tech": "E-Commerce",
@@ -22,7 +27,9 @@
     "draftUrl": "wizards-next-llp.vercel.app",
     "email": "",
     "phone": "",
-    "services": ["Website Development"],
+    "services": [
+      "Website Development"
+    ],
     "status": "In Progress",
     "since": "2026-06-01",
     "tech": "Next.js",
@@ -38,12 +45,15 @@
     "previousWebsite": "thetasteking.com",
     "email": "",
     "phone": "",
-    "services": ["Website Development", "Content"],
+    "services": [
+      "Website Development",
+      "Content"
+    ],
     "status": "In Progress",
     "since": "2026-06-01",
     "tech": "Next.js / React",
     "city": "Varanasi",
-    "notes": "Cold-pressed mustard oil brand — The Taste King. New website on Next.js. Content structure ready and shared with Priyesh Rai. Previous website: thetasteking.com.",
+    "notes": "Cold-pressed mustard oil brand - The Taste King. New website on Next.js. Content structure ready and shared with Priyesh Rai.",
     "assignedDev": "Priyesh Rai",
     "monthlyValue": 0
   },
@@ -54,11 +64,13 @@
     "draftUrl": "novasec-lac.vercel.app",
     "email": "",
     "phone": "",
-    "services": ["Website Development"],
+    "services": [
+      "Website Development"
+    ],
     "status": "Pending Approval",
     "since": "2026-06-01",
     "tech": "Web",
-    "notes": "Spain-based firm under Ganga Papers Pvt Ltd. Owner: Amit Chaudhary. Client contact: Rachita Agrawal. Estimate sent but not approved. Billing pending. Image update pending.",
+    "notes": "Spain-based firm under Ganga Papers Pvt Ltd. Owner: Amit Chaudhary. Client contact: Rachita Agrawal. Estimate sent but not approved. Billing pending.",
     "assignedDev": "",
     "monthlyValue": 0
   },
@@ -69,7 +81,9 @@
     "draftUrl": "sanket-bagla.vercel.app",
     "email": "",
     "phone": "",
-    "services": ["Website Development"],
+    "services": [
+      "Website Development"
+    ],
     "status": "Review Pending",
     "since": "2026-06-01",
     "tech": "Next.js / React",
@@ -83,7 +97,11 @@
     "website": "",
     "email": "",
     "phone": "",
-    "services": ["Website Development", "SEO", "Content"],
+    "services": [
+      "Website Development",
+      "SEO",
+      "Content"
+    ],
     "status": "Resuming",
     "since": "2026-06-01",
     "tech": "E-Commerce",
@@ -97,7 +115,10 @@
     "website": "askthefoundation.com",
     "email": "",
     "phone": "",
-    "services": ["Site Maintenance", "SEO"],
+    "services": [
+      "Site Maintenance",
+      "SEO"
+    ],
     "status": "Active",
     "since": "2026-06-01",
     "tech": "Laravel",
