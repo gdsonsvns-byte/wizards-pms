@@ -11,7 +11,7 @@
       "Client Relations"
     ],
     "status": "Active",
-    "responsibilities": "Oversees all projects. Handles all billing and payment follow-up. Reviews all work before launch.",
+    "responsibilities": "Oversees all projects. Handles all billing and payment follow-up.",
     "assignedClients": [
       "All Clients"
     ]
@@ -28,7 +28,7 @@
       "Backend"
     ],
     "status": "Active",
-    "responsibilities": "Senior development work. Built Ask Foundation on Laravel. Handles G D Sons development tasks.",
+    "responsibilities": "Senior development. Built Ask Foundation on Laravel.",
     "assignedClients": [
       "G D Sons",
       "Ask Foundation"
@@ -88,7 +88,7 @@
       "Meta Tags"
     ],
     "status": "Active",
-    "responsibilities": "Supports Rishi Khatri on SEO tasks. Handles on-page SEO work.",
+    "responsibilities": "Supports Rishi Khatri. Handles on-page SEO work.",
     "assignedClients": [
       "G D Sons"
     ]
@@ -105,7 +105,7 @@
       "Task Coordination"
     ],
     "status": "Active",
-    "responsibilities": "Handles all content management and task/work follow-up with clients. NOT billing follow-up (Akshat's responsibility).",
+    "responsibilities": "Handles content management and task/work follow-up. NOT billing (that's Akshat).",
     "assignedClients": [
       "G D Sons",
       "Maansinghka Agencies",
