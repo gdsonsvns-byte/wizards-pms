@@ -33,7 +33,7 @@
     "status": "In Progress",
     "since": "2026-06-01",
     "tech": "Next.js",
-    "notes": "Redevelopment of wizards.co.in on Next.js. Domain on GoDaddy, hosting on Hostinger, email on Milesweb cPanel. Akshat to create complete content structure.",
+    "notes": "Redevelopment of wizards.co.in on Next.js. Domain on GoDaddy, hosting on Hostinger, email on Milesweb cPanel.",
     "assignedDev": "Priyesh Rai",
     "monthlyValue": 0
   },
@@ -53,7 +53,7 @@
     "since": "2026-06-01",
     "tech": "Next.js / React",
     "city": "Varanasi",
-    "notes": "Cold-pressed mustard oil brand - The Taste King. New website on Next.js. Content structure ready and shared with Priyesh Rai.",
+    "notes": "Cold-pressed mustard oil brand - The Taste King. New website on Next.js.",
     "assignedDev": "Priyesh Rai",
     "monthlyValue": 0
   },
@@ -70,7 +70,7 @@
     "status": "Pending Approval",
     "since": "2026-06-01",
     "tech": "Web",
-    "notes": "Spain-based firm under Ganga Papers Pvt Ltd. Owner: Amit Chaudhary. Client contact: Rachita Agrawal. Estimate sent but not approved. Billing pending.",
+    "notes": "Spain-based firm under Ganga Papers. Owner: Amit Chaudhary. Contact: Rachita Agrawal. Estimate pending approval.",
     "assignedDev": "",
     "monthlyValue": 0
   },
@@ -87,7 +87,7 @@
     "status": "Review Pending",
     "since": "2026-06-01",
     "tech": "Next.js / React",
-    "notes": "Career counselor personal profile website. Built by Priyesh Rai. Awaiting review meeting with Akshat before launch.",
+    "notes": "Career counselor profile website. Built by Priyesh Rai. Awaiting Akshat review.",
     "assignedDev": "Priyesh Rai",
     "monthlyValue": 0
   },
@@ -105,7 +105,7 @@
     "status": "Resuming",
     "since": "2026-06-01",
     "tech": "E-Commerce",
-    "notes": "Project was halted last month. Now resuming. New products to be added. Basic SEO to be done.",
+    "notes": "Project halted last month, now resuming. New products and SEO needed.",
     "assignedDev": "",
     "monthlyValue": 0
   },
@@ -122,7 +122,7 @@
     "status": "Active",
     "since": "2026-06-01",
     "tech": "Laravel",
-    "notes": "Website built on Laravel by Rahul Maurya. Wizards responsible for Site Maintenance and SEO.",
+    "notes": "Built by Rahul Maurya on Laravel. Wizards handles maintenance and SEO.",
     "assignedDev": "Rahul Maurya",
     "monthlyValue": 0
   },
@@ -136,7 +136,7 @@
     "status": "Active",
     "since": "2026-06-01",
     "tech": "",
-    "notes": "Parent company of Novasac (novasac.eu). Owner: Amit Chaudhary.",
+    "notes": "Parent company of Novasac. Owner: Amit Chaudhary.",
     "assignedDev": "",
     "monthlyValue": 0
   }
