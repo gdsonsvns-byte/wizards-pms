@@ -4,7 +4,7 @@
     "clientId": "client_001",
     "clientName": "G D Sons",
     "activity": "Keyword Research",
-    "description": "Initial keyword research for gdsons.co.in product categories",
+    "description": "Initial keyword research",
     "status": "Completed",
     "date": "2026-06-08",
     "assignedTo": "Rishi Khatri",
@@ -15,32 +15,32 @@
     "clientId": "client_001",
     "clientName": "G D Sons",
     "activity": "On-Page SEO",
-    "description": "On-page SEO for product and category pages - meta titles, descriptions, H1 tags",
+    "description": "On-page SEO for product and category pages",
     "status": "In Progress",
     "date": "2026-06-08",
     "assignedTo": "Ekta Yadav",
-    "notes": "Being done alongside the Category and Catalog update task"
+    "notes": "Being done alongside Category and Catalog update task"
   },
   {
     "id": "seo_003",
     "clientId": "client_006",
     "clientName": "Wooden Souvenir",
     "activity": "Basic SEO Setup",
-    "description": "Basic SEO setup - meta tags, Google indexing, sitemap",
+    "description": "Basic SEO setup",
     "status": "Pending",
     "date": "2026-06-08",
     "assignedTo": "Rishi Khatri",
-    "notes": "Project just resumed after halt. To be started soon."
+    "notes": "Project just resumed. To be started soon."
   },
   {
     "id": "seo_004",
     "clientId": "client_007",
     "clientName": "Ask Foundation",
     "activity": "SEO Maintenance",
-    "description": "Ongoing SEO maintenance for askthefoundation.com",
+    "description": "Ongoing SEO maintenance",
     "status": "Ongoing",
     "date": "2026-06-08",
     "assignedTo": "Rishi Khatri",
-    "notes": "Regular SEO maintenance as part of service agreement"
+    "notes": "Regular maintenance as part of service agreement"
   }
 ]
