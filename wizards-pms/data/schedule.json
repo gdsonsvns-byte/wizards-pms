@@ -1,0 +1,46 @@
+[
+  {
+    "id": "event_001",
+    "clientId": "client_001",
+    "clientName": "G D Sons",
+    "title": "SEO Audit Review",
+    "description": "Review initial SEO audit findings for gdsons.co.in",
+    "date": "2026-06-15",
+    "time": "11:00",
+    "type": "Meeting",
+    "status": "Upcoming"
+  },
+  {
+    "id": "event_002",
+    "clientId": "client_002",
+    "clientName": "Wizards Next Website",
+    "title": "Content Structure Deadline — Akshat",
+    "description": "Akshat to complete the full content structure for the new Wizards website",
+    "date": "2026-06-10",
+    "time": "",
+    "type": "Deadline",
+    "status": "Upcoming"
+  },
+  {
+    "id": "event_003",
+    "clientId": "client_005",
+    "clientName": "Sanket Bagla",
+    "title": "Pre-Launch Review Meeting",
+    "description": "Akshat to review and approve sanket-bagla.vercel.app before going live",
+    "date": "2026-06-15",
+    "time": "",
+    "type": "Meeting",
+    "status": "Upcoming"
+  },
+  {
+    "id": "event_004",
+    "clientId": "client_004",
+    "clientName": "Novasac",
+    "title": "Estimate Approval Follow-Up",
+    "description": "Follow up with Rachita Agrawal on estimate approval and billing",
+    "date": "2026-06-15",
+    "time": "",
+    "type": "Follow-Up",
+    "status": "Upcoming"
+  }
+]
