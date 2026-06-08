@@ -10,6 +10,58 @@
     "hostingExpiry": "",
     "sslExpiry": "",
     "sslProvider": "",
-    "notes": "Primary domain for G D Sons e-commerce site"
+    "notes": "Primary domain for G D Sons e-commerce site. Hosted on MilesWeb."
+  },
+  {
+    "id": "domain_002",
+    "clientId": "client_002",
+    "clientName": "Wizards Next Website",
+    "domain": "wizards.co.in",
+    "registrar": "GoDaddy",
+    "domainExpiry": "",
+    "hostingProvider": "Hostinger",
+    "hostingExpiry": "",
+    "sslExpiry": "",
+    "sslProvider": "",
+    "notes": "Domain on GoDaddy, Hosting on Hostinger, Email on Milesweb cPanel. Draft live at wizards-next-llp.vercel.app."
+  },
+  {
+    "id": "domain_003",
+    "clientId": "client_003",
+    "clientName": "Maansinghka Agencies",
+    "domain": "maansinghkaagencies.com",
+    "registrar": "",
+    "domainExpiry": "",
+    "hostingProvider": "",
+    "hostingExpiry": "",
+    "sslExpiry": "",
+    "sslProvider": "",
+    "notes": "New website under development. Draft at maansinghka-agencies.vercel.app. Previous website: thetasteking.com."
+  },
+  {
+    "id": "domain_004",
+    "clientId": "client_004",
+    "clientName": "Novasac",
+    "domain": "novasac.eu",
+    "registrar": "",
+    "domainExpiry": "",
+    "hostingProvider": "",
+    "hostingExpiry": "",
+    "sslExpiry": "",
+    "sslProvider": "",
+    "notes": "Spain-based firm. Draft at novasec-lac.vercel.app. Estimate pending approval."
+  },
+  {
+    "id": "domain_005",
+    "clientId": "client_007",
+    "clientName": "Ask Foundation",
+    "domain": "askthefoundation.com",
+    "registrar": "",
+    "domainExpiry": "",
+    "hostingProvider": "",
+    "hostingExpiry": "",
+    "sslExpiry": "",
+    "sslProvider": "",
+    "notes": "Laravel-based website. Wizards handling maintenance and SEO."
   }
 ]

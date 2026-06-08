@@ -7,7 +7,40 @@
     "description": "Initial keyword research for gdsons.co.in product categories",
     "status": "Completed",
     "date": "2026-06-08",
-    "keywords": [],
-    "notes": "Focus on electrical products and kitchen appliances"
+    "assignedTo": "Rishi Khatri",
+    "notes": "Focus on electrical products, kitchen appliances and home goods"
+  },
+  {
+    "id": "seo_002",
+    "clientId": "client_001",
+    "clientName": "G D Sons",
+    "activity": "On-Page SEO",
+    "description": "On-page SEO for product and category pages — meta titles, descriptions, H1 tags",
+    "status": "In Progress",
+    "date": "2026-06-08",
+    "assignedTo": "Ekta Yadav",
+    "notes": "Being done alongside the Category and Catalog update task"
+  },
+  {
+    "id": "seo_003",
+    "clientId": "client_006",
+    "clientName": "Wooden Souvenir",
+    "activity": "Basic SEO Setup",
+    "description": "Basic SEO setup for Wooden Souvenir — meta tags, Google indexing, sitemap",
+    "status": "Pending",
+    "date": "2026-06-08",
+    "assignedTo": "Rishi Khatri",
+    "notes": "Project just resumed after halt. To be started soon."
+  },
+  {
+    "id": "seo_004",
+    "clientId": "client_007",
+    "clientName": "Ask Foundation",
+    "activity": "SEO Maintenance",
+    "description": "Ongoing SEO maintenance for askthefoundation.com",
+    "status": "Ongoing",
+    "date": "2026-06-08",
+    "assignedTo": "Rishi Khatri",
+    "notes": "Regular SEO maintenance as part of service agreement"
   }
 ]
