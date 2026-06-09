@@ -63,7 +63,7 @@ export default function ClientPage() {
           </div>
           <div style={{textAlign:'right',fontSize:12,color:'#666'}}>
             <div>Generated: {new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div>
-            <div>wizards-pms.vercel.app</div>
+            <div>web.wizards.co.in</div>
           </div>
         </div>
       </div>

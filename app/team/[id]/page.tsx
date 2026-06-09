@@ -70,7 +70,7 @@ export default function TeamMemberPage() {
       <div className="print-header" style={{padding:'20px 28px',borderBottom:'2px solid #333',marginBottom:20}}>
         <div style={{display:'flex',justifyContent:'space-between'}}>
           <div><div style={{fontSize:22,fontWeight:800}}>Wizards Websites</div><div style={{fontSize:13,color:'#666'}}>Team Member Report — {member.name}</div></div>
-          <div style={{textAlign:'right',fontSize:12,color:'#666'}}><div>{new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div><div>wizards-pms.vercel.app</div></div>
+          <div style={{textAlign:'right',fontSize:12,color:'#666'}}><div>{new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div><div>web.wizards.co.in</div></div>
         </div>
       </div>
 
