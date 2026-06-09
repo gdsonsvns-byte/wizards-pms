@@ -1,17 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-const TEAM: Record<string, { name: string; teamId: string }> = {
-  'akshat.gd@gmail.com':           { name: 'Akshat Agrawal',   teamId: 'team_001' },
-  'ravikhtn18@gmail.com':          { name: 'Ravi Khetan',      teamId: 'team_002' },
-  'rahulkumarmaurya464@gmail.com': { name: 'Rahul Maurya',     teamId: 'team_003' },
-  'priyeshrai369@gmail.com':       { name: 'Priyesh Rai',      teamId: 'team_007' },
-  'rishi.wizards@gmail.com':       { name: 'Rishi Khatri',     teamId: 'team_004' },
-  'ekta30747@gmail.com':           { name: 'Ekta Yadav',       teamId: 'team_005' },
-  'priyambada.wizards@gmail.com':  { name: 'Priyambada Gupta', teamId: 'team_006' },
-}
-
-// In-memory OTP store — resets on cold start, fine for 10-min OTPs
-const otpStore: Record<string, { otp: string; expires: number; name: string; teamId: string }> = {}
+import { TEAM, otpStore } from '../../lib/otp-store'
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString()
@@ -72,6 +60,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
-
-// Verify OTP — called by verify-otp route via shared store
-export { otpStore, TEAM }

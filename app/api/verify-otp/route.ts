@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// Import shared store from send-otp
-// Note: In serverless, this works within the same warm instance
-// For production scale, replace with Redis/DB. For this team size, fine.
-import { otpStore } from '../send-otp/route'
+import { otpStore } from '../../lib/otp-store'
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,10 +20,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Incorrect OTP. Please try again.' }, { status: 400 })
     }
 
-    // Valid — clear OTP
+    // Valid — clear OTP immediately (single use)
     delete otpStore[key]
 
-    // Return session info — client stores in sessionStorage
     return NextResponse.json({
       success: true,
       user: {
