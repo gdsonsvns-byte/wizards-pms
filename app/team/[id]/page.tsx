@@ -175,13 +175,7 @@ export default function TeamMemberPage() {
               </div>
               <div style={{display:'flex',flexDirection:'column',gap:6,paddingLeft:8}}>
                 {dt.map((t:any)=>(
-                  <div key={t.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 12px',background:'var(--greenBg)',borderRadius:8,border:'1px solid #bbf7d0'}}>
-                    <div>
-                      <div style={{fontWeight:600,fontSize:13,textDecoration:'line-through',opacity:.7}}>{t.title}</div>
-                      <div style={{fontSize:11,color:'var(--text3)',marginTop:2}}>🏢 {t.clientName} · 🏷 {t.type}</div>
-                    </div>
-                    <span className="badge badge-green">✓</span>
-                  </div>
+                  <CompletedTaskCard key={t.id} t={t} />
                 ))}
               </div>
             </div>
@@ -194,16 +188,167 @@ export default function TeamMemberPage() {
 }
 
 function TaskCard({t, today}: {t:any, today:string}) {
+  const [copied, setCopied] = useState(false)
+
+  function buildCopyText() {
+    const lines: string[] = []
+    lines.push(`📋 ${t.title}`)
+    lines.push(`🏢 Client: ${t.clientName}`)
+    if (t.type)        lines.push(`🏷 Type: ${t.type}`)
+    if (t.priority)    lines.push(`⚡ Priority: ${t.priority}`)
+    if (t.status)      lines.push(`📌 Status: ${t.status}`)
+    if (t.dueDate)     lines.push(`⏰ Due: ${t.dueDate}`)
+    if (t.description) lines.push(`📝 ${t.description}`)
+    if (t.notes)       lines.push(`💡 Notes: ${t.notes}`)
+    if (t.followUpBy)  lines.push(`👁 Follow-up: ${t.followUpBy}`)
+    return lines.join('\n')
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(buildCopyText())
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch(e) {
+      // fallback
+      const ta = document.createElement('textarea')
+      ta.value = buildCopyText()
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const isOverdue = t.dueDate && t.dueDate < today
+  const isToday   = t.dueDate && t.dueDate === today
+
   return (
-    <div style={{background:'var(--bg3)',borderRadius:9,padding:'10px 14px',border:'1px solid var(--border)',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:10}}>
-      <div style={{flex:1}}>
-        <div style={{fontWeight:600,fontSize:13}}>{t.title}</div>
-        <div style={{fontSize:11,color:'var(--text3)',marginTop:3}}>🏢 {t.clientName} · 🏷 {t.type}</div>
-        {t.description && <div style={{fontSize:12,color:'var(--text2)',marginTop:4,lineHeight:1.5}}>{t.description}</div>}
+    <div style={{background:'var(--bg2)',borderRadius:10,border:'1px solid var(--border)',overflow:'hidden',boxShadow:'var(--shadow)'}}>
+      {/* Client name bar at top */}
+      <div style={{background:'var(--accentBg)',borderBottom:'1px solid var(--border)',padding:'5px 14px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <span style={{fontSize:11,fontWeight:700,color:'var(--accent)',letterSpacing:'.02em'}}>🏢 {t.clientName}</span>
+        <span className="badge badge-gray" style={{fontSize:10}}>{t.type}</span>
       </div>
-      <div style={{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end',flexShrink:0}}>
-        <span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span>
-        <span className={`badge ${statusColor(t.status)}`}>{t.status}</span>
+
+      {/* Main content */}
+      <div style={{padding:'10px 14px'}}>
+        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:10}}>
+          <div style={{fontWeight:700,fontSize:13,color:'var(--text)',lineHeight:1.4,flex:1}}>{t.title}</div>
+          <div style={{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end',flexShrink:0}}>
+            <span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span>
+            <span className={`badge ${statusColor(t.status)}`}>{t.status}</span>
+          </div>
+        </div>
+
+        {t.description && (
+          <div style={{fontSize:12,color:'var(--text2)',marginTop:6,lineHeight:1.5}}>{t.description}</div>
+        )}
+        {t.notes && (
+          <div style={{fontSize:11,color:'var(--text3)',marginTop:4,fontStyle:'italic'}}>💡 {t.notes}</div>
+        )}
+
+        {/* Footer row */}
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:10,gap:8,flexWrap:'wrap'}}>
+          <div style={{display:'flex',gap:10,flexWrap:'wrap',fontSize:11,color:'var(--text3)'}}>
+            {t.dueDate && (
+              <span style={{color:isOverdue?'var(--red)':isToday?'var(--red)':'inherit',fontWeight:isToday||isOverdue?700:400}}>
+                {isOverdue?'⚠️ Overdue:':isToday?'🔴 Due Today':'⏰'} {t.dueDate}
+              </span>
+            )}
+            {t.followUpBy && <span>👁 {t.followUpBy}</span>}
+          </div>
+
+          {/* Copy button */}
+          <button
+            onClick={handleCopy}
+            className="no-print"
+            style={{
+              display:'flex',alignItems:'center',gap:5,
+              padding:'5px 12px',
+              background:copied?'var(--greenBg)':'var(--bg3)',
+              border:`1px solid ${copied?'#bbf7d0':'var(--border)'}`,
+              borderRadius:7,cursor:'pointer',
+              fontSize:11,fontWeight:600,
+              color:copied?'var(--green)':'var(--text2)',
+              transition:'all .2s',
+              fontFamily:'inherit',
+              flexShrink:0
+            }}
+          >
+            {copied ? '✅ Copied!' : '📋 Copy'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CompletedTaskCard({t}: {t:any}) {
+  const [copied, setCopied] = useState(false)
+
+  function buildCopyText() {
+    const lines: string[] = []
+    lines.push(`✅ ${t.title}`)
+    lines.push(`🏢 Client: ${t.clientName}`)
+    if (t.type)        lines.push(`🏷 Type: ${t.type}`)
+    if (t.description) lines.push(`📝 ${t.description}`)
+    if (t.completedAt) lines.push(`📅 Completed: ${t.completedAt}`)
+    return lines.join('\n')
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(buildCopyText())
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch(e) {
+      const ta = document.createElement('textarea')
+      ta.value = buildCopyText()
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <div style={{background:'var(--bg2)',borderRadius:10,border:'1px solid #bbf7d0',overflow:'hidden'}}>
+      {/* Client bar */}
+      <div style={{background:'var(--greenBg)',borderBottom:'1px solid #bbf7d0',padding:'5px 14px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <span style={{fontSize:11,fontWeight:700,color:'var(--green)'}}>🏢 {t.clientName}</span>
+        <span className="badge badge-gray" style={{fontSize:10}}>{t.type}</span>
+      </div>
+      {/* Content */}
+      <div style={{padding:'9px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:600,fontSize:13,textDecoration:'line-through',opacity:.65}}>{t.title}</div>
+          {t.description && <div style={{fontSize:11,color:'var(--text3)',marginTop:3,lineHeight:1.4}}>{t.description}</div>}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+          <span className="badge badge-green">✓ Done</span>
+          <button
+            onClick={handleCopy}
+            className="no-print"
+            style={{
+              display:'flex',alignItems:'center',gap:5,
+              padding:'5px 12px',
+              background:copied?'var(--greenBg)':'var(--bg3)',
+              border:`1px solid ${copied?'#bbf7d0':'var(--border)'}`,
+              borderRadius:7,cursor:'pointer',
+              fontSize:11,fontWeight:600,
+              color:copied?'var(--green)':'var(--text2)',
+              transition:'all .2s',
+              fontFamily:'inherit'
+            }}
+          >
+            {copied ? '✅ Copied!' : '📋 Copy'}
+          </button>
+        </div>
       </div>
     </div>
   )
