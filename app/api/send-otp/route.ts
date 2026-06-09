@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { TEAM, otpStore } from '../../lib/otp-store'
+
+const TEAM: Record<string, { name: string; teamId: string }> = {
+  'akshat.gd@gmail.com':           { name: 'Akshat Agrawal',   teamId: 'team_001' },
+  'ravikhtn18@gmail.com':          { name: 'Ravi Khetan',      teamId: 'team_002' },
+  'rahulkumarmaurya464@gmail.com': { name: 'Rahul Maurya',     teamId: 'team_003' },
+  'priyeshrai369@gmail.com':       { name: 'Priyesh Rai',      teamId: 'team_007' },
+  'rishi.wizards@gmail.com':       { name: 'Rishi Khatri',     teamId: 'team_004' },
+  'ekta30747@gmail.com':           { name: 'Ekta Yadav',       teamId: 'team_005' },
+  'priyambada.wizards@gmail.com':  { name: 'Priyambada Gupta', teamId: 'team_006' },
+}
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString()
@@ -16,8 +25,12 @@ export async function POST(req: NextRequest) {
     }
 
     const otp = generateOTP()
-    otpStore[key] = { otp, expires: Date.now() + 10 * 60 * 1000, ...member }
+    const expires = Date.now() + 10 * 60 * 1000 // 10 minutes
 
+    // Store OTP payload in a cookie — survives across serverless instances
+    const payload = Buffer.from(JSON.stringify({ otp, expires, email: key, ...member })).toString('base64')
+
+    // Send email via Resend
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -54,7 +67,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to send OTP email' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, name: member.name })
+    // Set OTP in cookie — httpOnly, secure, 10-min expiry
+    const response = NextResponse.json({ success: true, name: member.name })
+    response.cookies.set('pms_otp', payload, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 10 * 60, // 10 minutes in seconds
+      path: '/',
+    })
+    return response
+
   } catch (e) {
     console.error(e)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
