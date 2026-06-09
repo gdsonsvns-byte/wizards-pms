@@ -1,8 +1,45 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { fetchPMS, statusColor, priorityColor, avatarColor, getClientCategory, slugify, daysUntil } from './lib/api'
 import styles from './page.module.css'
+
+function UserBadge() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const raw = localStorage.getItem('pms_user')
+    if (raw) setUser(JSON.parse(raw))
+  }, [])
+
+  function logout() {
+    localStorage.removeItem('pms_user')
+    router.push('/login')
+  }
+
+  if (!user) return null
+
+  const initials = user.name.split(' ').map((n:string)=>n[0]).join('').slice(0,2)
+
+  return (
+    <div style={{marginTop:10,padding:'8px 10px',background:'var(--bg3)',borderRadius:9,border:'1px solid var(--border)'}}>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+        <div style={{width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#3b5bdb,#5c7cfa)',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:10,fontWeight:800,flexShrink:0}}>{initials}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:12,fontWeight:700,color:'var(--text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.name}</div>
+          <div style={{fontSize:10,color:'var(--text3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.email}</div>
+        </div>
+      </div>
+      <button onClick={logout} style={{width:'100%',padding:'5px',background:'transparent',border:'1px solid var(--border)',borderRadius:6,fontSize:11,color:'var(--text3)',cursor:'pointer',fontFamily:'inherit',transition:'all .15s'}}
+        onMouseOver={e=>(e.currentTarget.style.background='var(--bg4)')}
+        onMouseOut={e=>(e.currentTarget.style.background='transparent')}>
+        Sign Out
+      </button>
+    </div>
+  )
+}
 
 export default function Dashboard() {
   const [data, setData] = useState<any>(null)
@@ -67,7 +104,7 @@ export default function Dashboard() {
         </nav>
         <div className={styles.sidebarFooter}>
           <div className={styles.agencyBadge}><div className={styles.agencyDot}></div><span>Live</span></div>
-        </div>
+          <UserBadge /></div>
       </aside>
 
       <main className={styles.main}>
