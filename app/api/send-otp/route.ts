@@ -6,7 +6,7 @@ const TEAM: Record<string, { name: string; teamId: string }> = {
   'rahulkumarmaurya464@gmail.com': { name: 'Rahul Maurya',     teamId: 'team_003' },
   'priyeshrai369@gmail.com':       { name: 'Priyesh Rai',      teamId: 'team_007' },
   'rishi.wizards@gmail.com':       { name: 'Rishi Khatri',     teamId: 'team_004' },
-  'ekta30747@gmail.com':           { name: 'Ekta Yadav',       teamId: 'team_005' },
+  'ektandmitteamc@gmail.com':      { name: 'Ekta Yadav',       teamId: 'team_005' },
   'priyambada.wizards@gmail.com':  { name: 'Priyambada Gupta', teamId: 'team_006' },
 }
 
