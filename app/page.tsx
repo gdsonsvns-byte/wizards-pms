@@ -268,23 +268,7 @@ export default function Dashboard() {
           {tab==='tasks' && <TasksView tasks={tasks} team={team} />}
 
           {/* ── SEO ── */}
-          {tab==='seo' && (
-            <div className="card" style={{padding:0,overflow:'hidden'}}>
-              <table>
-                <thead><tr><th>Activity</th><th>Client</th><th>Assigned</th><th>Date</th><th>Status</th><th>Notes</th></tr></thead>
-                <tbody>{seo.map((s:any)=>(
-                  <tr key={s.id}>
-                    <td style={{fontWeight:600}}>{s.activity}</td>
-                    <td>{s.clientName}</td>
-                    <td style={{fontSize:12}}>{s.assignedTo}</td>
-                    <td style={{fontSize:12}}>{s.period||s.date}</td>
-                    <td><span className={`badge ${statusColor(s.status)}`}>{s.status}</span></td>
-                    <td style={{color:'var(--text2)',maxWidth:240,fontSize:12}}>{s.notes||'—'}</td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            </div>
-          )}
+          {tab==='seo' && <SEOView seo={seo} />}
 
           {/* ── DOMAINS ── */}
           {tab==='domains' && (
@@ -553,4 +537,137 @@ function ExpiryBadge({date}: {date: string}) {
   if (days < 30) return <span className="badge badge-red">{days}d left</span>
   if (days < 90) return <span className="badge badge-yellow">{days}d</span>
   return <span className="badge badge-green">{new Date(date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</span>
+}
+
+// ── SEO View — grouped by client ────────────────────────
+function SEOView({ seo }: { seo: any[] }) {
+  const [search, setSearch] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [collapsedClients, setCollapsedClients] = useState<Record<string,boolean>>({})
+
+  const statuses = ['all','Completed','In Progress','Ongoing','Planned','Pending']
+
+  const filtered = seo
+    .filter((s:any) => filterStatus === 'all' || s.status === filterStatus)
+    .filter((s:any) => !search ||
+      s.clientName.toLowerCase().includes(search.toLowerCase()) ||
+      s.activity.toLowerCase().includes(search.toLowerCase()) ||
+      (s.assignedTo||'').toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a:any,b:any) => b.date?.localeCompare(a.date||'') || 0)
+
+  // Group by clientName
+  const grouped: Record<string, any[]> = {}
+  filtered.forEach((s:any) => {
+    const k = s.clientName || 'Unknown'
+    if (!grouped[k]) grouped[k] = []
+    grouped[k].push(s)
+  })
+  const clientNames = Object.keys(grouped).sort()
+
+  function toggleClient(name: string) {
+    setCollapsedClients(p => ({ ...p, [name]: !p[name] }))
+  }
+
+  function activityIcon(activity: string) {
+    const a = activity.toLowerCase()
+    if (a.includes('backlink'))  return '🔗'
+    if (a.includes('blog') || a.includes('content')) return '✍️'
+    if (a.includes('keyword'))   return '🔍'
+    if (a.includes('audit'))     return '🔎'
+    if (a.includes('report'))    return '📊'
+    if (a.includes('gmb'))       return '📍'
+    if (a.includes('on-page'))   return '📝'
+    if (a.includes('technical')) return '⚙️'
+    return '📈'
+  }
+
+  return (
+    <div>
+      {/* Controls */}
+      <div style={{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
+        <div className="search-box" style={{maxWidth:320}}>
+          <span>🔍</span>
+          <input placeholder="Search client, activity, member..." value={search} onChange={e=>setSearch(e.target.value)} />
+          {search && <button onClick={()=>setSearch('')} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text3)',fontSize:16}}>×</button>}
+        </div>
+        <div className="filter-bar">
+          <span style={{fontSize:12,color:'var(--text3)',fontWeight:600}}>Status:</span>
+          {statuses.map(s => (
+            <button key={s} className={`filter-btn ${filterStatus===s?'active':''}`} onClick={()=>setFilterStatus(s)}>
+              {s==='all'?'All':s}
+            </button>
+          ))}
+        </div>
+        <div style={{marginLeft:'auto',fontSize:12,color:'var(--text3)'}}>
+          {filtered.length} activities · {clientNames.length} clients
+        </div>
+      </div>
+
+      {clientNames.length === 0 && (
+        <div className="empty-state card"><div className="icon">🔍</div><p>No SEO activities match your filters</p></div>
+      )}
+
+      {/* Grouped by client */}
+      {clientNames.map(clientName => {
+        const items = grouped[clientName]
+        const isCollapsed = collapsedClients[clientName]
+        const doneCount = items.filter((s:any) => s.status === 'Completed').length
+        const activeCount = items.filter((s:any) => ['In Progress','Ongoing'].includes(s.status)).length
+
+        return (
+          <div key={clientName} className="cat-section">
+            {/* Client header */}
+            <div className="cat-header" onClick={() => toggleClient(clientName)}
+              style={{background:'var(--bg2)',borderLeft:'3px solid var(--accent)'}}>
+              <span style={{fontSize:15}}>🏢</span>
+              <span className="cat-title">{clientName}</span>
+              <div style={{display:'flex',gap:6,marginLeft:'auto',marginRight:8}}>
+                {activeCount > 0 && <span className="badge badge-accent">{activeCount} active</span>}
+                {doneCount > 0  && <span className="badge badge-green">{doneCount} done</span>}
+                <span className="cat-count">{items.length} total</span>
+              </div>
+              <span className={`cat-arrow ${!isCollapsed?'open':''}`}>▶</span>
+            </div>
+
+            {/* Activities table */}
+            {!isCollapsed && (
+              <div className="card" style={{padding:0,overflow:'hidden',marginBottom:4}}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Activity</th>
+                      <th>Assigned To</th>
+                      <th>Date / Period</th>
+                      <th>Status</th>
+                      <th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((s:any) => (
+                      <tr key={s.id}>
+                        <td>
+                          <div style={{display:'flex',alignItems:'center',gap:7}}>
+                            <span style={{fontSize:15}}>{activityIcon(s.activity)}</span>
+                            <div>
+                              <div style={{fontWeight:600,fontSize:13}}>{s.activity}</div>
+                              {s.description && <div style={{fontSize:11,color:'var(--text2)',marginTop:2}}>{s.description.slice(0,80)}{s.description.length>80?'...':''}</div>}
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{fontSize:12,whiteSpace:'nowrap'}}>{s.assignedTo}</td>
+                        <td style={{fontSize:12,color:'var(--text2)'}}>{s.period||s.date||'—'}</td>
+                        <td><span className={`badge ${statusColor(s.status)}`}>{s.status}</span></td>
+                        <td style={{fontSize:12,color:'var(--text2)',maxWidth:220}}>{s.notes||'—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
