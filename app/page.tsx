@@ -59,11 +59,12 @@ export default function Dashboard() {
   if (!data) return <div className={styles.loader}><p style={{color:'var(--red)'}}>Failed to load. <button onClick={load}>Retry</button></p></div>
 
   const clients = data.clients || [], tasks = data.tasks || [], seo = data.seo || []
-  const domains = data.domains || [], schedule = data.schedule || [], team = data.team || []
+  const domains = data.domains || [], team = data.team || []
 
   const pendingTasks = tasks.filter((t:any) => t.status !== 'Completed')
   const highPri = tasks.filter((t:any) => ['High','Critical'].includes(t.priority) && t.status !== 'Completed')
-  const upcoming = schedule.filter((e:any) => new Date(e.date) >= new Date()).slice(0,6)
+  // Upcoming: tasks with due dates in the future
+  const upcoming = tasks.filter((t:any) => t.dueDate && t.dueDate >= new Date().toISOString().slice(0,10) && t.status !== 'Completed').sort((a:any,b:any) => a.dueDate.localeCompare(b.dueDate)).slice(0,6)
 
   // Client categories
   const activeClients = clients.filter((c:any) => getClientCategory(c) === 'active')
@@ -81,7 +82,6 @@ export default function Dashboard() {
     {id:'tasks',label:'Tasks',icon:'✅',count:pendingTasks.length},
     {id:'seo',label:'SEO',icon:'📈',count:seo.length},
     {id:'domains',label:'Domains',icon:'🌐',count:domains.length},
-    {id:'schedule',label:'Schedule',icon:'📅',count:upcoming.length},
     {id:'team',label:'Team',icon:'👥',count:team.length},
   ]
 
@@ -155,14 +155,14 @@ export default function Dashboard() {
                   ))}</div>}
                 </div>
 
-                {/* Upcoming */}
+                {/* Upcoming — driven from task due dates */}
                 <div className="card">
-                  <div className={styles.cardTitle}>📅 Upcoming <span style={{fontSize:11,color:'var(--text3)',fontWeight:400,cursor:'pointer'}} onClick={()=>setTab('schedule')}>view all →</span></div>
-                  {upcoming.length===0?<div className="empty-state"><div className="icon">📭</div><p>Nothing scheduled</p></div>:
-                  <div className={styles.taskList}>{upcoming.map((e:any)=>(
-                    <div key={e.id} className={styles.taskItem}>
-                      <div><div className={styles.taskTitle}>{e.title}</div><div className={styles.taskMeta}>{e.clientName} · {e.date}</div></div>
-                      <span className="badge badge-accent">{e.type}</span>
+                  <div className={styles.cardTitle}>📅 Upcoming Due <span style={{fontSize:11,color:'var(--text3)',fontWeight:400,cursor:'pointer'}} onClick={()=>setTab('tasks')}>view all →</span></div>
+                  {upcoming.length===0?<div className="empty-state"><div className="icon">📭</div><p>No upcoming due dates</p></div>:
+                  <div className={styles.taskList}>{upcoming.map((t:any)=>(
+                    <div key={t.id} className={styles.taskItem}>
+                      <div><div className={styles.taskTitle}>{t.title}</div><div className={styles.taskMeta}>{t.clientName} · {t.assignedTo} · {t.dueDate}</div></div>
+                      <span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span>
                     </div>
                   ))}</div>}
                 </div>
@@ -290,7 +290,6 @@ export default function Dashboard() {
           )}
 
           {/* ── SCHEDULE ── */}
-          {tab==='schedule' && <ScheduleView schedule={schedule} />}
 
           {/* ── TEAM ── */}
           {tab==='team' && (
@@ -454,80 +453,7 @@ function TasksView({tasks, team}: any) {
   )
 }
 
-// ── Schedule View with grouping + filter ─────────────────────
-function ScheduleView({schedule}: any) {
-  const [search, setSearch] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const today = new Date().toISOString().slice(0,10)
 
-  const statuses = ['all','Planned','Upcoming','Urgent','Completed','Overdue']
-
-  const filtered = schedule
-    .filter((e:any) => filterStatus==='all' || e.status===filterStatus)
-    .filter((e:any) => !search || e.title.toLowerCase().includes(search.toLowerCase()) || e.clientName.toLowerCase().includes(search.toLowerCase()))
-    .sort((a:any,b:any) => a.date.localeCompare(b.date))
-
-  const grouped: Record<string, any[]> = {}
-  filtered.forEach((e:any) => {
-    let key = e.status || 'Other'
-    if (e.date < today) key = '⚠️ Past Due'
-    else if (e.date === today) key = '🔴 Today'
-    else if (e.status === 'Urgent') key = '🚨 Urgent'
-    else if (e.status === 'Completed') key = '✅ Completed'
-    else key = `📅 Upcoming — ${e.date}`
-    if (!grouped[key]) grouped[key] = []
-    grouped[key].push(e)
-  })
-
-  const order = ['🚨 Urgent','🔴 Today','⚠️ Past Due']
-  const sortedKeys = Object.keys(grouped).sort((a,b) => {
-    const ai = order.indexOf(a), bi = order.indexOf(b)
-    if (ai !== -1 && bi !== -1) return ai - bi
-    if (ai !== -1) return -1
-    if (bi !== -1) return 1
-    return a.localeCompare(b)
-  })
-
-  return (
-    <div>
-      <div style={{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
-        <div className="search-box" style={{maxWidth:320}}>
-          <span>🔍</span>
-          <input placeholder="Search events, clients..." value={search} onChange={e=>setSearch(e.target.value)} />
-          {search && <button onClick={()=>setSearch('')} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text3)',fontSize:16}}>×</button>}
-        </div>
-        <div className="filter-bar">
-          <span style={{fontSize:12,color:'var(--text3)',fontWeight:600}}>Status:</span>
-          {statuses.map(s => (
-            <button key={s} className={`filter-btn ${filterStatus===s?'active':''}`} onClick={()=>setFilterStatus(s)}>{s==='all'?'All':s}</button>
-          ))}
-        </div>
-      </div>
-
-      {sortedKeys.map(key => (
-        <div key={key} style={{marginBottom:20}}>
-          <div className="group-header"><span>{key}</span><span style={{fontWeight:400}}>({grouped[key].length})</span></div>
-          <div className="card" style={{padding:0,overflow:'hidden'}}>
-            <table>
-              <thead><tr><th>Event</th><th>Client</th><th>Date</th><th>Time</th><th>Type</th><th>Status</th></tr></thead>
-              <tbody>{grouped[key].map((e:any) => (
-                <tr key={e.id}>
-                  <td><div style={{fontWeight:600}}>{e.title}</div>{e.description&&<div style={{fontSize:11,color:'var(--text2)',marginTop:2}}>{e.description}</div>}</td>
-                  <td>{e.clientName}</td>
-                  <td style={{fontSize:12,color:e.date===today?'var(--red)':e.date<today?'var(--orange)':'inherit',fontWeight:e.date===today?700:400}}>{e.date}</td>
-                  <td style={{fontSize:12}}>{e.time||'—'}</td>
-                  <td><span className="badge badge-accent">{e.type}</span></td>
-                  <td><span className={`badge ${statusColor(e.status)}`}>{e.status}</span></td>
-                </tr>
-              ))}</tbody>
-            </table>
-          </div>
-        </div>
-      ))}
-      {filtered.length===0 && <div className="empty-state card"><div className="icon">🔍</div><p>No events match your filters</p></div>}
-    </div>
-  )
-}
 
 // ── Expiry Badge ─────────────────────────────────────────────
 function ExpiryBadge({date}: {date: string}) {
