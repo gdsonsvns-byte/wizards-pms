@@ -131,7 +131,7 @@ export default function ClientPage() {
                   <td><span className="badge badge-gray">{t.type}</span></td>
                   <td style={{fontSize:12}}>{t.assignedTo}</td>
                   <td><span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span></td>
-                  <td style={{fontSize:12,color:t.dueDate&&t.dueDate<=today?'var(--red)':'inherit'}}>{t.dueDate||'—'}</td>
+                  <td style={{fontSize:12,color:t.dueDate&&t.dueDate<=today&&t.status!=='Completed'?'var(--red)':'inherit'}}>{t.dueDate||'—'}</td>
                   <td><span className={`badge ${statusColor(t.status)}`}>{t.status}</span></td>
                 </tr>
               ))}</tbody>
@@ -165,7 +165,7 @@ export default function ClientPage() {
                       {item._date && <span>📅 {item._date}</span>}
                       {item.assignedTo && <span>👤 {item.assignedTo}</span>}
                       {item.priority && <span className={`badge ${priorityColor(item.priority)}`} style={{fontSize:10}}>{item.priority}</span>}
-                      {item.dueDate && <span style={{color:item.dueDate<=today?'var(--red)':'inherit'}}>⏰ Due {item.dueDate}</span>}
+                      {item.dueDate && <span style={{color:item.dueDate<=today&&item.status!=='Completed'?'var(--red)':'inherit'}}>⏰ Due {item.dueDate}</span>}
                     </div>
                   </div>
                 </div>

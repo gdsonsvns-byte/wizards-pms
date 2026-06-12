@@ -222,8 +222,8 @@ function TaskCard({t, today}: {t:any, today:string}) {
     }
   }
 
-  const isOverdue = t.dueDate && t.dueDate < today
-  const isToday   = t.dueDate && t.dueDate === today
+  const isOverdue = t.dueDate && t.dueDate < today && t.status !== 'Completed'
+  const isToday   = t.dueDate && t.dueDate === today && t.status !== 'Completed'
 
   return (
     <div style={{background:'var(--bg2)',borderRadius:10,border:'1px solid var(--border)',overflow:'hidden',boxShadow:'var(--shadow)'}}>

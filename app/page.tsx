@@ -383,9 +383,9 @@ function TasksView({tasks, team}: any) {
     else if (groupBy==='member') key = t.assignedTo || 'Unassigned'
     else if (groupBy==='date') {
       if (!t.dueDate) key = '📌 No Due Date'
-      else if (t.dueDate < today) key = '⚠️ Overdue'
-      else if (t.dueDate === today) key = '🔴 Today'
-      else if (t.dueDate <= new Date(Date.now()+86400000).toISOString().slice(0,10)) key = '🟡 Tomorrow'
+      else if (t.dueDate < today && t.status !== 'Completed') key = '⚠️ Overdue'
+      else if (t.dueDate === today && t.status !== 'Completed') key = '🔴 Today'
+      else if (t.dueDate <= new Date(Date.now()+86400000).toISOString().slice(0,10) && t.status !== 'Completed') key = '🟡 Tomorrow'
       else key = `📅 ${t.dueDate}`
     }
     if (!grouped[key]) grouped[key] = []
@@ -440,7 +440,7 @@ function TasksView({tasks, team}: any) {
                   <td><span className="badge badge-gray">{t.type}</span></td>
                   <td style={{fontSize:12,whiteSpace:'nowrap'}}>{t.assignedTo}</td>
                   <td><span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span></td>
-                  <td style={{fontSize:12,color:t.dueDate&&t.dueDate<=today?'var(--red)':'var(--text2)',fontWeight:t.dueDate===today?700:400}}>{t.dueDate||'—'}</td>
+                  <td style={{fontSize:12,color:t.dueDate&&t.dueDate<=today&&t.status!=='Completed'?'var(--red)':'var(--text2)',fontWeight:t.dueDate===today&&t.status!=='Completed'?700:400}}>{t.dueDate||'—'}</td>
                   <td><span className={`badge ${statusColor(t.status)}`}>{t.status}</span></td>
                 </tr>
               ))}</tbody>
