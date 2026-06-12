@@ -47,11 +47,16 @@ export default function Dashboard() {
   const [search, setSearch] = useState('')
   const [collapsed, setCollapsed] = useState<Record<string,boolean>>({maintenance:true, prospective:true})
   const [tab, setTab] = useState('overview')
+  const [lastSynced, setLastSynced] = useState<string>('')
 
   useEffect(() => { load(); const t = setInterval(load, 60000); return () => clearInterval(t) }, [])
 
   async function load() {
-    try { const d = await fetchPMS(); setData(d) } catch(e) {}
+    try {
+      const d = await fetchPMS()
+      setData(d)
+      setLastSynced(new Date().toLocaleString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}))
+    } catch(e) {}
     setLoading(false)
   }
 
@@ -105,6 +110,11 @@ export default function Dashboard() {
         </nav>
         <div className={styles.sidebarFooter}>
           <div className={styles.agencyBadge}><div className={styles.agencyDot}></div><span>Live</span></div>
+          {lastSynced && (
+            <div style={{fontSize:10,color:'var(--text3)',marginTop:6,lineHeight:1.4,textAlign:'center'}}>
+              🔄 Last synced<br/><span style={{color:'var(--text2)',fontWeight:600}}>{lastSynced}</span>
+            </div>
+          )}
           <UserBadge /></div>
       </aside>
 
@@ -371,6 +381,17 @@ function TasksView({tasks, team, clients}: any) {
   const [groupBy, setGroupBy] = useState<'status'|'member'|'date'|'client'|'priority'>('status')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [collapsed, setCollapsed] = useState<Record<string,boolean>>({})
+
+  // Reset collapsed state when groupBy changes — all collapsed by default
+  useEffect(() => { setCollapsed({}) }, [groupBy])
+
+  function toggleGroup(key: string) {
+    setCollapsed(p => ({...p, [key]: !p[key]}))
+  }
+
+  function expandAll() { setCollapsed(Object.fromEntries(sortedKeys.map(k=>[k,false]))) }
+  function collapseAll() { setCollapsed(Object.fromEntries(sortedKeys.map(k=>[k,true]))) }
 
   const statuses = ['all','In Progress','Pending','Ongoing','Blocked','Open','Planned','Completed']
   const today = new Date().toISOString().slice(0,10)
@@ -439,57 +460,109 @@ function TasksView({tasks, team, clients}: any) {
             </button>
           ))}
         </div>
-        <div className="filter-bar">
+        <div className="filter-bar" style={{alignItems:'center'}}>
           <span style={{fontSize:12,color:'var(--text3)',fontWeight:600}}>Status:</span>
           {statuses.map(s => (
             <button key={s} className={`filter-btn ${filterStatus===s?'active':''}`} onClick={()=>setFilterStatus(s)}>{s==='all'?'All':s}</button>
           ))}
+          <StatusTooltip />
         </div>
-        <div style={{marginLeft:'auto',fontSize:12,color:'var(--text3)'}}>{filtered.length} tasks</div>
+        <div style={{display:'flex',gap:8,alignItems:'center',marginLeft:'auto'}}>
+          <span style={{fontSize:12,color:'var(--text3)'}}>{filtered.length} tasks</span>
+          <button className="filter-btn" onClick={expandAll} style={{fontSize:11}}>Expand All</button>
+          <button className="filter-btn" onClick={collapseAll} style={{fontSize:11}}>Collapse All</button>
+        </div>
       </div>
 
-      {sortedKeys.map(key => (
-        <div key={key} style={{marginBottom:20}}>
-          <div className="group-header">
-            <span>{key}</span>
-            <span style={{fontWeight:400}}>({grouped[key].length})</span>
+      {sortedKeys.map(key => {
+        const isOpen = collapsed[key] === false  // false = explicitly opened; undefined = default collapsed
+        return (
+          <div key={key} style={{marginBottom:12}}>
+            {/* Collapsible group header */}
+            <div
+              className="group-header"
+              onClick={() => toggleGroup(key)}
+              style={{cursor:'pointer',userSelect:'none',padding:'10px 14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:isOpen?'var(--radius) var(--radius) 0 0':'var(--radius)',marginBottom:0,display:'flex',alignItems:'center',gap:8}}
+            >
+              <span style={{fontSize:12,color:'var(--text3)',transition:'transform .2s',display:'inline-block',transform:isOpen?'rotate(90deg)':'rotate(0deg)'}}>▶</span>
+              <span style={{fontWeight:700,fontSize:13,color:'var(--text)',flex:1}}>{key}</span>
+              <span className="badge badge-gray">{grouped[key].length} task{grouped[key].length!==1?'s':''}</span>
+            </div>
+            {/* Table — shown only when expanded */}
+            {isOpen && (
+              <div className="card" style={{padding:0,overflow:'hidden',borderRadius:'0 0 var(--radius) var(--radius)',borderTop:'none',marginTop:0}}>
+                <table>
+                  <thead><tr><th>Task</th><th>Client</th><th>Type</th><th>Assigned</th><th>Priority</th><th>Due</th><th>Status</th></tr></thead>
+                  <tbody>{grouped[key].map((t:any) => {
+                    const clientId = t.clientId || clientMap[t.clientName]
+                    const memberId = teamMap[t.assignedTo]
+                    return (
+                      <tr key={t.id}>
+                        <td><div style={{fontWeight:600}}>{t.title}</div>{t.description&&<div style={{fontSize:11,color:'var(--text2)',marginTop:2}}>{t.description.slice(0,80)}{t.description.length>80?'...':''}</div>}</td>
+                        <td style={{fontSize:12,whiteSpace:'nowrap'}}>
+                          {clientId
+                            ? <Link href={`/client/${clientId}`} style={{color:'var(--accent)',textDecoration:'none',fontWeight:500}}>{t.clientName} ↗</Link>
+                            : t.clientName}
+                        </td>
+                        <td><span className="badge badge-gray">{t.type}</span></td>
+                        <td style={{fontSize:12,whiteSpace:'nowrap'}}>
+                          {memberId
+                            ? <Link href={`/team/${memberId}`} style={{color:'var(--accent)',textDecoration:'none',fontWeight:500}}>{t.assignedTo} ↗</Link>
+                            : t.assignedTo}
+                        </td>
+                        <td><span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span></td>
+                        <td style={{fontSize:12,color:t.dueDate&&t.dueDate<=today&&t.status!=='Completed'?'var(--red)':'var(--text2)',fontWeight:t.dueDate===today&&t.status!=='Completed'?700:400}}>{t.dueDate||'—'}</td>
+                        <td><span className={`badge ${statusColor(t.status)}`}>{t.status}</span></td>
+                      </tr>
+                    )
+                  })}</tbody>
+                </table>
+              </div>
+            )}
           </div>
-          <div className="card" style={{padding:0,overflow:'hidden'}}>
-            <table>
-              <thead><tr><th>Task</th><th>Client</th><th>Type</th><th>Assigned</th><th>Priority</th><th>Due</th><th>Status</th></tr></thead>
-              <tbody>{grouped[key].map((t:any) => {
-                const clientId = t.clientId || clientMap[t.clientName]
-                const memberId = teamMap[t.assignedTo]
-                return (
-                  <tr key={t.id}>
-                    <td><div style={{fontWeight:600}}>{t.title}</div>{t.description&&<div style={{fontSize:11,color:'var(--text2)',marginTop:2}}>{t.description.slice(0,80)}{t.description.length>80?'...':''}</div>}</td>
-                    <td style={{fontSize:12,whiteSpace:'nowrap'}}>
-                      {clientId
-                        ? <Link href={`/client/${clientId}`} style={{color:'var(--accent)',textDecoration:'none',fontWeight:500}}>{t.clientName} ↗</Link>
-                        : t.clientName}
-                    </td>
-                    <td><span className="badge badge-gray">{t.type}</span></td>
-                    <td style={{fontSize:12,whiteSpace:'nowrap'}}>
-                      {memberId
-                        ? <Link href={`/team/${memberId}`} style={{color:'var(--accent)',textDecoration:'none',fontWeight:500}}>{t.assignedTo} ↗</Link>
-                        : t.assignedTo}
-                    </td>
-                    <td><span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span></td>
-                    <td style={{fontSize:12,color:t.dueDate&&t.dueDate<=today&&t.status!=='Completed'?'var(--red)':'var(--text2)',fontWeight:t.dueDate===today&&t.status!=='Completed'?700:400}}>{t.dueDate||'—'}</td>
-                    <td><span className={`badge ${statusColor(t.status)}`}>{t.status}</span></td>
-                  </tr>
-                )
-              })}</tbody>
-            </table>
-          </div>
-        </div>
-      ))}
+        )
+      })}
       {filtered.length===0 && <div className="empty-state card"><div className="icon">🔍</div><p>No tasks match your filters</p></div>}
     </div>
   )
 }
 
+// ── Status Tooltip ───────────────────────────────────────
+function StatusTooltip() {
+  const [show, setShow] = useState(false)
 
+  const statuses = [
+    {s:'Pending',    c:'badge-yellow', d:'Not started. No blocker. Ready to begin when picked up.'},
+    {s:'In Progress',c:'badge-accent',  d:'Actively being worked on right now. Has a clear finish line.'},
+    {s:'Ongoing',    c:'badge-blue',    d:'Recurring or permanent responsibility. Repeats forever, never truly done.'},
+    {s:'Planned',    c:'badge-gray',    d:'Scheduled for a future date. Intent confirmed but not started yet.'},
+    {s:'Blocked',    c:'badge-red',     d:'Cannot proceed. Waiting on another task, person, decision or external input.'},
+    {s:'Open',       c:'badge-red',     d:'A bug or issue found and logged but not yet assigned or actioned.'},
+    {s:'Completed',  c:'badge-green',   d:'Done. No further action needed.'},
+  ]
+
+  return (
+    <div style={{position:'relative',display:'inline-flex',alignItems:'center'}}>
+      <button
+        onMouseEnter={()=>setShow(true)}
+        onMouseLeave={()=>setShow(false)}
+        onClick={()=>setShow(p=>!p)}
+        style={{width:18,height:18,borderRadius:'50%',background:'var(--bg3)',border:'1px solid var(--border)',cursor:'pointer',fontSize:11,fontWeight:700,color:'var(--text3)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'inherit',flexShrink:0}}
+      >?</button>
+      {show && (
+        <div style={{position:'absolute',left:24,top:-8,zIndex:100,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,boxShadow:'var(--shadow2)',padding:'14px 16px',width:340,display:'flex',flexDirection:'column',gap:10}}>
+          <div style={{fontSize:12,fontWeight:700,color:'var(--text)',marginBottom:4}}>Status Definitions</div>
+          {statuses.map(({s,c,d}) => (
+            <div key={s} style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+              <span className={`badge ${c}`} style={{flexShrink:0,marginTop:1}}>{s}</span>
+              <span style={{fontSize:12,color:'var(--text2)',lineHeight:1.5}}>{d}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ── Expiry Badge ─────────────────────────────────────────────
 function ExpiryBadge({date}: {date: string}) {
