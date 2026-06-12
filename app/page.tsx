@@ -77,12 +77,13 @@ export default function Dashboard() {
     : list
 
   const tabs = [
-    {id:'overview',label:'Overview',icon:'⚡'},
-    {id:'clients',label:'Clients',icon:'🏢',count:activeClients.length},
-    {id:'tasks',label:'Tasks',icon:'✅',count:pendingTasks.length},
-    {id:'seo',label:'SEO',icon:'📈',count:seo.length},
-    {id:'domains',label:'Domains',icon:'🌐',count:domains.length},
-    {id:'team',label:'Team',icon:'👥',count:team.length},
+    {id:'overview',label:'Wizards Overview',icon:'⚡'},
+    {id:'mydash',  label:'My Dashboard',    icon:'👤'},
+    {id:'clients', label:'Clients',         icon:'🏢',count:activeClients.length},
+    {id:'tasks',   label:'Tasks',           icon:'✅',count:pendingTasks.length},
+    {id:'seo',     label:'SEO',             icon:'📈',count:seo.length},
+    {id:'domains', label:'Domains',         icon:'🌐',count:domains.length},
+    {id:'team',    label:'Team',            icon:'👥',count:team.length},
   ]
 
   return (
@@ -265,26 +266,35 @@ export default function Dashboard() {
           )}
 
           {/* ── TASKS ── */}
-          {tab==='tasks' && <TasksView tasks={tasks} team={team} />}
+          {tab==='tasks' && <TasksView tasks={tasks} team={team} clients={clients} />}
+
+          {/* ── MY DASHBOARD ── */}
+          {tab==='mydash' && <MyDashboard tasks={tasks} seo={seo} team={team} clients={clients} />}
 
           {/* ── SEO ── */}
-          {tab==='seo' && <SEOView seo={seo} />}
+          {tab==='seo' && <SEOView seo={seo} clients={clients} team={team} />}
 
           {/* ── DOMAINS ── */}
           {tab==='domains' && (
             <div className="card" style={{padding:0,overflow:'hidden'}}>
               <table>
                 <thead><tr><th>Domain</th><th>Client</th><th>Registrar</th><th>Domain Expiry</th><th>Hosting</th><th>Hosting Expiry</th></tr></thead>
-                <tbody>{domains.map((d:any)=>(
-                  <tr key={d.id}>
-                    <td><a href={`https://${d.domain}`} target="_blank" rel="noreferrer" style={{color:'var(--accent)',textDecoration:'none',fontWeight:600}}>{d.domain} ↗</a></td>
-                    <td>{d.clientName}</td>
-                    <td style={{fontSize:12}}>{d.registrar||'—'}</td>
-                    <td><ExpiryBadge date={d.domainExpiry}/></td>
-                    <td style={{fontSize:12}}>{d.hostingProvider||'—'}</td>
-                    <td><ExpiryBadge date={d.hostingExpiry}/></td>
-                  </tr>
-                ))}</tbody>
+                <tbody>{domains.map((d:any)=>{
+                  const cid = d.clientId
+                  return (
+                    <tr key={d.id}>
+                      <td><a href={`https://${d.domain}`} target="_blank" rel="noreferrer" style={{color:'var(--accent)',textDecoration:'none',fontWeight:600}}>{d.domain} ↗</a></td>
+                      <td>{cid
+                        ? <Link href={`/client/${cid}`} style={{color:'var(--accent)',textDecoration:'none',fontWeight:500}}>{d.clientName} ↗</Link>
+                        : d.clientName}
+                      </td>
+                      <td style={{fontSize:12}}>{d.registrar||'—'}</td>
+                      <td><ExpiryBadge date={d.domainExpiry}/></td>
+                      <td style={{fontSize:12}}>{d.hostingProvider||'—'}</td>
+                      <td><ExpiryBadge date={d.hostingExpiry}/></td>
+                    </tr>
+                  )
+                })}</tbody>
               </table>
             </div>
           )}
@@ -357,19 +367,24 @@ function ClientCard({c, tasks, seo}: any) {
 }
 
 // ── Tasks View with grouping + filter ───────────────────────
-function TasksView({tasks, team}: any) {
-  const [groupBy, setGroupBy] = useState<'status'|'member'|'date'>('status')
+function TasksView({tasks, team, clients}: any) {
+  const [groupBy, setGroupBy] = useState<'status'|'member'|'date'|'client'|'priority'>('status')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
 
   const statuses = ['all','In Progress','Pending','Ongoing','Blocked','Open','Planned','Completed']
   const today = new Date().toISOString().slice(0,10)
 
+  // Build lookup maps for links
+  const clientMap: Record<string,string> = {}
+  ;(clients||[]).forEach((c:any) => { clientMap[c.name] = c.id })
+  const teamMap: Record<string,string> = {}
+  ;(team||[]).forEach((m:any) => { teamMap[m.name] = m.id })
+
   const filtered = tasks
     .filter((t:any) => filterStatus==='all' || t.status===filterStatus)
-    .filter((t:any) => !search || t.title.toLowerCase().includes(search.toLowerCase()) || t.clientName.toLowerCase().includes(search.toLowerCase()) || t.assignedTo.toLowerCase().includes(search.toLowerCase()))
+    .filter((t:any) => !search || t.title.toLowerCase().includes(search.toLowerCase()) || (t.clientName||'').toLowerCase().includes(search.toLowerCase()) || (t.assignedTo||'').toLowerCase().includes(search.toLowerCase()))
     .sort((a:any,b:any) => {
-      // Current dates first
       if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate)
       if (a.dueDate) return -1
       if (b.dueDate) return 1
@@ -379,8 +394,10 @@ function TasksView({tasks, team}: any) {
   const grouped: Record<string, any[]> = {}
   filtered.forEach((t:any) => {
     let key = ''
-    if (groupBy==='status') key = t.status
-    else if (groupBy==='member') key = t.assignedTo || 'Unassigned'
+    if (groupBy==='status')   key = t.status
+    else if (groupBy==='member')   key = t.assignedTo || 'Unassigned'
+    else if (groupBy==='client')   key = t.clientName || 'Unknown'
+    else if (groupBy==='priority') key = t.priority || 'Unknown'
     else if (groupBy==='date') {
       if (!t.dueDate) key = '📌 No Due Date'
       else if (t.dueDate < today && t.status !== 'Completed') key = '⚠️ Overdue'
@@ -392,8 +409,13 @@ function TasksView({tasks, team}: any) {
     grouped[key].push(t)
   })
 
+  const priorityOrder = ['Critical','High','Medium','Low']
   const statusOrder = ['🔴 Today','⚠️ Overdue','🟡 Tomorrow','In Progress','Open','Blocked','Pending','Ongoing','Planned','Completed','📌 No Due Date']
   const sortedKeys = Object.keys(grouped).sort((a,b) => {
+    if (groupBy==='priority') {
+      const ai=priorityOrder.indexOf(a), bi=priorityOrder.indexOf(b)
+      return (ai===-1?99:ai)-(bi===-1?99:bi)
+    }
     const ai = statusOrder.indexOf(a), bi = statusOrder.indexOf(b)
     if (ai===-1&&bi===-1) return a.localeCompare(b)
     if (ai===-1) return 1; if (bi===-1) return -1
@@ -404,15 +426,17 @@ function TasksView({tasks, team}: any) {
     <div>
       {/* Controls */}
       <div style={{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
-        <div className="search-box" style={{maxWidth:320}}>
+        <div className="search-box" style={{maxWidth:300}}>
           <span>🔍</span>
           <input placeholder="Search tasks, clients, members..." value={search} onChange={e=>setSearch(e.target.value)} />
           {search && <button onClick={()=>setSearch('')} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text3)',fontSize:16}}>×</button>}
         </div>
         <div className="filter-bar">
           <span style={{fontSize:12,color:'var(--text3)',fontWeight:600}}>Group:</span>
-          {(['status','member','date'] as const).map(g => (
-            <button key={g} className={`filter-btn ${groupBy===g?'active':''}`} onClick={()=>setGroupBy(g)}>{g.charAt(0).toUpperCase()+g.slice(1)}</button>
+          {(['status','client','priority','member','date'] as const).map(g => (
+            <button key={g} className={`filter-btn ${groupBy===g?'active':''}`} onClick={()=>setGroupBy(g)}>
+              {g==='status'?'Status':g==='client'?'Client':g==='priority'?'Priority':g==='member'?'Member':'Date'}
+            </button>
           ))}
         </div>
         <div className="filter-bar">
@@ -421,9 +445,9 @@ function TasksView({tasks, team}: any) {
             <button key={s} className={`filter-btn ${filterStatus===s?'active':''}`} onClick={()=>setFilterStatus(s)}>{s==='all'?'All':s}</button>
           ))}
         </div>
+        <div style={{marginLeft:'auto',fontSize:12,color:'var(--text3)'}}>{filtered.length} tasks</div>
       </div>
 
-      {/* Grouped tasks */}
       {sortedKeys.map(key => (
         <div key={key} style={{marginBottom:20}}>
           <div className="group-header">
@@ -433,17 +457,29 @@ function TasksView({tasks, team}: any) {
           <div className="card" style={{padding:0,overflow:'hidden'}}>
             <table>
               <thead><tr><th>Task</th><th>Client</th><th>Type</th><th>Assigned</th><th>Priority</th><th>Due</th><th>Status</th></tr></thead>
-              <tbody>{grouped[key].map((t:any) => (
-                <tr key={t.id}>
-                  <td><div style={{fontWeight:600}}>{t.title}</div>{t.description&&<div style={{fontSize:11,color:'var(--text2)',marginTop:2}}>{t.description.slice(0,80)}{t.description.length>80?'...':''}</div>}</td>
-                  <td style={{fontSize:12,whiteSpace:'nowrap'}}>{t.clientName}</td>
-                  <td><span className="badge badge-gray">{t.type}</span></td>
-                  <td style={{fontSize:12,whiteSpace:'nowrap'}}>{t.assignedTo}</td>
-                  <td><span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span></td>
-                  <td style={{fontSize:12,color:t.dueDate&&t.dueDate<=today&&t.status!=='Completed'?'var(--red)':'var(--text2)',fontWeight:t.dueDate===today&&t.status!=='Completed'?700:400}}>{t.dueDate||'—'}</td>
-                  <td><span className={`badge ${statusColor(t.status)}`}>{t.status}</span></td>
-                </tr>
-              ))}</tbody>
+              <tbody>{grouped[key].map((t:any) => {
+                const clientId = t.clientId || clientMap[t.clientName]
+                const memberId = teamMap[t.assignedTo]
+                return (
+                  <tr key={t.id}>
+                    <td><div style={{fontWeight:600}}>{t.title}</div>{t.description&&<div style={{fontSize:11,color:'var(--text2)',marginTop:2}}>{t.description.slice(0,80)}{t.description.length>80?'...':''}</div>}</td>
+                    <td style={{fontSize:12,whiteSpace:'nowrap'}}>
+                      {clientId
+                        ? <Link href={`/client/${clientId}`} style={{color:'var(--accent)',textDecoration:'none',fontWeight:500}}>{t.clientName} ↗</Link>
+                        : t.clientName}
+                    </td>
+                    <td><span className="badge badge-gray">{t.type}</span></td>
+                    <td style={{fontSize:12,whiteSpace:'nowrap'}}>
+                      {memberId
+                        ? <Link href={`/team/${memberId}`} style={{color:'var(--accent)',textDecoration:'none',fontWeight:500}}>{t.assignedTo} ↗</Link>
+                        : t.assignedTo}
+                    </td>
+                    <td><span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span></td>
+                    <td style={{fontSize:12,color:t.dueDate&&t.dueDate<=today&&t.status!=='Completed'?'var(--red)':'var(--text2)',fontWeight:t.dueDate===today&&t.status!=='Completed'?700:400}}>{t.dueDate||'—'}</td>
+                    <td><span className={`badge ${statusColor(t.status)}`}>{t.status}</span></td>
+                  </tr>
+                )
+              })}</tbody>
             </table>
           </div>
         </div>
@@ -466,7 +502,11 @@ function ExpiryBadge({date}: {date: string}) {
 }
 
 // ── SEO View — grouped by client ────────────────────────
-function SEOView({ seo }: { seo: any[] }) {
+function SEOView({ seo, clients, team }: { seo: any[], clients?: any[], team?: any[] }) {
+  const clientIdMap: Record<string,string> = {}
+  ;(clients||[]).forEach((c:any) => { clientIdMap[c.name] = c.id })
+  const teamIdMap: Record<string,string> = {}
+  ;(team||[]).forEach((m:any) => { teamIdMap[m.name] = m.id })
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [collapsedClients, setCollapsedClients] = useState<Record<string,boolean>>({})
@@ -570,7 +610,10 @@ function SEOView({ seo }: { seo: any[] }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((s:any) => (
+                    {items.map((s:any) => {
+                      const cid = s.clientId || clientIdMap[s.clientName]
+                      const mid = teamIdMap[s.assignedTo]
+                      return (
                       <tr key={s.id}>
                         <td>
                           <div style={{display:'flex',alignItems:'center',gap:7}}>
@@ -581,12 +624,16 @@ function SEOView({ seo }: { seo: any[] }) {
                             </div>
                           </div>
                         </td>
-                        <td style={{fontSize:12,whiteSpace:'nowrap'}}>{s.assignedTo}</td>
+                        <td style={{fontSize:12,whiteSpace:'nowrap'}}>
+                          {mid
+                            ? <Link href={`/team/${mid}`} style={{color:'var(--accent)',textDecoration:'none',fontWeight:500}}>{s.assignedTo} ↗</Link>
+                            : s.assignedTo}
+                        </td>
                         <td style={{fontSize:12,color:'var(--text2)'}}>{s.period||s.date||'—'}</td>
                         <td><span className={`badge ${statusColor(s.status)}`}>{s.status}</span></td>
                         <td style={{fontSize:12,color:'var(--text2)',maxWidth:220}}>{s.notes||'—'}</td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>
@@ -594,6 +641,187 @@ function SEOView({ seo }: { seo: any[] }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── My Dashboard ─────────────────────────────────────────
+function MyDashboard({ tasks, seo, team, clients }: any) {
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const raw = localStorage.getItem('pms_user')
+    if (raw) setUser(JSON.parse(raw))
+  }, [])
+
+  if (!user) return (
+    <div className="empty-state card"><div className="icon">🔐</div><p>Please log in to view your dashboard</p></div>
+  )
+
+  const member = team.find((m:any) => m.id === user.teamId)
+  const myTasks = tasks.filter((t:any) => t.assignedTo === user.name)
+  const openTasks = myTasks.filter((t:any) => t.status !== 'Completed')
+  const doneTasks = myTasks.filter((t:any) => t.status === 'Completed')
+  const criticalHigh = openTasks.filter((t:any) => ['Critical','High'].includes(t.priority))
+  const blocked = openTasks.filter((t:any) => ['Blocked','Open'].includes(t.status))
+  const today = new Date().toISOString().slice(0,10)
+  const overdue = openTasks.filter((t:any) => t.dueDate && t.dueDate < today)
+  const dueToday = openTasks.filter((t:any) => t.dueDate === today)
+  const mySEO = seo.filter((s:any) => s.assignedTo === user.name || (s.assignedTo||'').includes(user.name.split(' ')[0]))
+
+  // Activity by date — last 14 days
+  const last14: {date:string,done:number,total:number}[] = []
+  for (let i=13; i>=0; i--) {
+    const d = new Date(Date.now()-i*86400000).toISOString().slice(0,10)
+    const dayDone = myTasks.filter((t:any) => t.completedAt === d).length
+    const daySEO  = mySEO.filter((s:any) => s.date === d).length
+    last14.push({date:d, done:dayDone, total:dayDone+daySEO})
+  }
+  const maxVal = Math.max(...last14.map(d=>d.total), 1)
+
+  const col = member ? avatarColor(member.name) : '#3b5bdb'
+  const initials = user.name.split(' ').map((n:string)=>n[0]).join('').slice(0,2)
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:16}}>
+      {/* Hero */}
+      <div className="card">
+        <div style={{display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+          <div style={{width:52,height:52,borderRadius:13,background:`linear-gradient(135deg,${col},${col}99)`,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:800,fontSize:20,flexShrink:0}}>{initials}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:20,fontWeight:800}}>{user.name}</div>
+            <div style={{fontSize:13,color:'var(--text2)',marginTop:2}}>{member?.designation || 'Team Member'}</div>
+          </div>
+          <Link href={`/team/${user.teamId}`} style={{padding:'8px 16px',background:'var(--accentBg)',color:'var(--accent)',borderRadius:9,textDecoration:'none',fontSize:13,fontWeight:600}}>
+            View Full Profile →
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:12}}>
+        {[
+          {l:'Open Tasks',    v:openTasks.length,     c:'var(--accent)'},
+          {l:'Completed',     v:doneTasks.length,      c:'var(--green)'},
+          {l:'High Priority', v:criticalHigh.length,   c:'var(--red)'},
+          {l:'Blocked',       v:blocked.length,        c:'var(--red)'},
+          {l:'Due Today',     v:dueToday.length,       c:'var(--yellow)'},
+          {l:'Overdue',       v:overdue.length,        c:'var(--orange)'},
+          {l:'SEO Activities',v:mySEO.length,          c:'var(--purple)'},
+          {l:'Clients',       v:new Set(myTasks.map((t:any)=>t.clientId)).size, c:'var(--blue)'},
+        ].map((s,i) => (
+          <div key={i} className="card" style={{textAlign:'center',padding:'14px 10px'}}>
+            <div style={{fontSize:24,fontWeight:800,color:s.c}}>{s.v}</div>
+            <div style={{fontSize:11,color:'var(--text2)',marginTop:3}}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Activity Chart — last 14 days */}
+      <div className="card">
+        <div style={{fontWeight:700,fontSize:14,marginBottom:16}}>📊 Activity — Last 14 Days</div>
+        <div style={{display:'flex',alignItems:'flex-end',gap:6,height:80}}>
+          {last14.map((d,i) => (
+            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+              <div style={{width:'100%',background:'var(--bg3)',borderRadius:4,overflow:'hidden',height:60,display:'flex',alignItems:'flex-end'}}>
+                <div style={{
+                  width:'100%',
+                  height:`${Math.round((d.total/maxVal)*100)}%`,
+                  background:d.total>0?`linear-gradient(180deg,var(--accent),var(--accent2))`:'transparent',
+                  borderRadius:4,
+                  transition:'height .3s',
+                  minHeight: d.total>0?4:0
+                }} title={`${d.date}: ${d.done} tasks, ${d.total-d.done} SEO`}/>
+              </div>
+              <div style={{fontSize:9,color:'var(--text3)',transform:'rotate(-45deg)',transformOrigin:'center',whiteSpace:'nowrap'}}>
+                {d.date.slice(5)}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{display:'flex',gap:16,marginTop:12,fontSize:11,color:'var(--text3)'}}>
+          <div style={{display:'flex',alignItems:'center',gap:4}}><div style={{width:10,height:10,borderRadius:2,background:'var(--accent)'}}/> Tasks completed + SEO activities</div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      {myTasks.length > 0 && (
+        <div className="card">
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10}}>Overall Progress</div>
+          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
+            <div style={{flex:1,height:10,background:'var(--bg3)',borderRadius:10,overflow:'hidden'}}>
+              <div style={{height:'100%',width:`${Math.round(doneTasks.length/myTasks.length*100)}%`,background:'linear-gradient(90deg,var(--green),#34d399)',borderRadius:10}}/>
+            </div>
+            <span style={{fontSize:13,fontWeight:700,color:'var(--green)'}}>{Math.round(doneTasks.length/myTasks.length*100)}%</span>
+          </div>
+          <div style={{display:'flex',gap:14,flexWrap:'wrap',fontSize:12}}>
+            {[
+              {l:'Done',c:doneTasks.length,co:'var(--green)'},
+              {l:'In Progress',c:myTasks.filter((t:any)=>t.status==='In Progress').length,co:'var(--accent)'},
+              {l:'Pending',c:myTasks.filter((t:any)=>t.status==='Pending').length,co:'var(--yellow)'},
+              {l:'Blocked',c:blocked.length,co:'var(--red)'},
+            ].map(s=>(
+              <div key={s.l} style={{display:'flex',alignItems:'center',gap:5}}>
+                <div style={{width:8,height:8,borderRadius:'50%',background:s.co}}/><span style={{color:'var(--text2)'}}>{s.l}:</span><span style={{fontWeight:700,color:s.co}}>{s.c}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Urgent items */}
+      {(overdue.length > 0 || dueToday.length > 0 || blocked.length > 0) && (
+        <div className="card">
+          <div style={{fontWeight:700,fontSize:14,marginBottom:12}}>🚨 Needs Attention</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {[...overdue.map((t:any)=>({...t,_flag:'⚠️ Overdue'})), ...dueToday.map((t:any)=>({...t,_flag:'🔴 Due Today'})), ...blocked.map((t:any)=>({...t,_flag:'🔴 Blocked'}))].slice(0,8).map((t:any)=>(
+              <div key={t.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 12px',background:'var(--redBg)',borderRadius:8,border:'1px solid #fca5a5',gap:10}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:13}}>{t._flag} {t.title}</div>
+                  <div style={{fontSize:11,color:'var(--text2)',marginTop:2}}>🏢 {t.clientName}</div>
+                </div>
+                <span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* My open tasks grouped by client */}
+      <div className="card">
+        <div style={{fontWeight:700,fontSize:14,marginBottom:14}}>
+          📋 My Open Tasks ({openTasks.length})
+          <Link href={`/team/${user.teamId}`} style={{fontSize:11,color:'var(--text3)',fontWeight:400,marginLeft:8,textDecoration:'none'}}>view full log →</Link>
+        </div>
+        {openTasks.length === 0
+          ? <div className="empty-state"><div className="icon">🎉</div><p>All clear!</p></div>
+          : (() => {
+              const byClient: Record<string,any[]> = {}
+              openTasks.forEach((t:any) => { const k=t.clientName||'Unknown'; if(!byClient[k])byClient[k]=[]; byClient[k].push(t) })
+              return Object.entries(byClient).map(([cn, ct]:any) => (
+                <div key={cn} style={{marginBottom:14}}>
+                  <div style={{fontSize:11,fontWeight:700,color:'var(--accent)',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:6,display:'flex',gap:6,alignItems:'center'}}>
+                    🏢 {cn} <span style={{fontWeight:400,color:'var(--text3)'}}>({ct.length})</span>
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:5,paddingLeft:8}}>
+                    {ct.map((t:any) => (
+                      <div key={t.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',background:'var(--bg3)',borderRadius:8,border:'1px solid var(--border)',gap:10}}>
+                        <div style={{flex:1}}>
+                          <div style={{fontWeight:600,fontSize:13}}>{t.title}</div>
+                          <div style={{fontSize:11,color:'var(--text3)',marginTop:2}}>🏷 {t.type}{t.dueDate?` · ⏰ ${t.dueDate}`:''}</div>
+                        </div>
+                        <div style={{display:'flex',gap:5,flexShrink:0}}>
+                          <span className={`badge ${priorityColor(t.priority)}`}>{t.priority}</span>
+                          <span className={`badge ${statusColor(t.status)}`}>{t.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            })()
+        }
+      </div>
     </div>
   )
 }
